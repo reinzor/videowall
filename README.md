@@ -26,7 +26,6 @@ sudo apt-get -y install x-window-system \
                         gir1.2-gst-plugins-base-1.0 \
                         python-gst-1.0 \
                         pulseaudio \
-                        python-enum \
                         python-colorlog
 ```
 

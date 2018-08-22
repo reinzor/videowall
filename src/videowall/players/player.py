@@ -5,7 +5,7 @@ import socket
 from videowall.gi_version import Gst, GObject
 
 from .player_exceptions import PlayerException
-from .player_platforms import PlayerPlatform, get_player_platform_strings
+from .player_platforms import PlayerPlatform, PlayerPlatformX86, PlayerPlatformRaspberryPi, get_player_platforms
 
 logger = logging.getLogger(__name__)
 
@@ -14,9 +14,9 @@ class Player(object):
     Gst.init(None)
 
     def __init__(self, player_platform, filename, ip, port, gui):
-        if not isinstance(player_platform, PlayerPlatform):
+        if not issubclass(player_platform, PlayerPlatform):
             raise PlayerException("Invalid player platform {}, available platforms: {}".format(player_platform,
-                                                                                               get_player_platform_strings()))
+                                                                                               get_player_platforms()))
 
         real_path = os.path.realpath(os.path.expanduser(filename))
         if not os.path.isfile(real_path):
@@ -49,9 +49,9 @@ class Player(object):
     def _get_pipeline(filename, player_platform, gui):
         launch_cmd = "filesrc location={}".format(filename)
 
-        if player_platform == PlayerPlatform.X86_64:
+        if player_platform == PlayerPlatformX86:
             launch_cmd += " ! decodebin"
-        elif player_platform == PlayerPlatform.RASPBERRY_PI:
+        elif player_platform == PlayerPlatformRaspberryPi:
             launch_cmd += " ! qtdemux ! h264parse ! omxh264dec"
 
         if gui:

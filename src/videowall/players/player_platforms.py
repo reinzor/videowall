@@ -1,16 +1,21 @@
-from enum import Enum
-
 from .player_exceptions import PlayerException
 
 
-class PlayerPlatform(Enum):
-    X86_64 = 1
-    RASPBERRY_PI = 2
+class PlayerPlatform(object):
+    pass
+
+
+class PlayerPlatformX86(PlayerPlatform):
+    pass
+
+
+class PlayerPlatformRaspberryPi(PlayerPlatform):
+    pass
 
 
 _string_player_platform_map = {
-  "x86": PlayerPlatform.X86_64,
-  "rpi": PlayerPlatform.RASPBERRY_PI
+  "x86": PlayerPlatformX86,
+  "rpi": PlayerPlatformRaspberryPi
 }
 
 
@@ -25,3 +30,7 @@ def player_platform_from_string(string):
 
 def get_player_platform_strings():
     return _string_player_platform_map.keys()
+
+
+def get_player_platforms():
+    return _string_player_platform_map.values()
