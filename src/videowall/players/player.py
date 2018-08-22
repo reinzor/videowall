@@ -5,7 +5,7 @@ import socket
 from videowall.gi_version import Gst, GObject
 
 from .player_exceptions import PlayerException
-from .player_platforms import PlayerPlatform
+from .player_platforms import PlayerPlatform, get_player_platform_strings
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +16,7 @@ class Player(object):
     def __init__(self, player_platform, filename, ip, port, gui):
         if not isinstance(player_platform, PlayerPlatform):
             raise PlayerException("Invalid player platform {}, available platforms: {}".format(player_platform,
-                                                                                               list(PlayerPlatform)))
+                                                                                               get_player_platform_strings()))
 
         real_path = os.path.realpath(os.path.expanduser(filename))
         if not os.path.isfile(real_path):
