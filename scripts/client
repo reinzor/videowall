@@ -4,11 +4,11 @@ import logging
 from argparse import ArgumentParser
 
 from videowall.client import Client
-from videowall.players import PlayerPlatform
+from videowall.players import get_player_platform_strings, player_platform_from_string
 
 if __name__ == '__main__':
     parser = ArgumentParser()
-    parser.add_argument('player_platform', type=PlayerPlatform, choices=list(PlayerPlatform))
+    parser.add_argument('player_platform', choices=get_player_platform_strings())
     parser.add_argument('--verbose', action='store_true')
     parser.add_argument('--broadcast_port', type=int, default=2000)
 
@@ -17,4 +17,4 @@ if __name__ == '__main__':
     if args.verbose:
         logging.getLogger().setLevel(logging.DEBUG)
 
-    Client(args.broadcast_port, args.player_platform).run()
+    Client(args.broadcast_port, player_platform_from_string(args.player_platform)).run()

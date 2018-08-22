@@ -2,11 +2,11 @@
 
 import logging
 from argparse import ArgumentParser
-from videowall.players import PlayerServer, PlayerPlatform
+from videowall.players import PlayerServer, get_player_platform_strings, player_platform_from_string
 
 if __name__ == '__main__':
     parser = ArgumentParser()
-    parser.add_argument('platform', type=PlayerPlatform, choices=list(PlayerPlatform))
+    parser.add_argument('platform', choices=get_player_platform_strings())
     parser.add_argument('filename')
     parser.add_argument('--ip', default='127.0.0.1')
     parser.add_argument('--port', type=int, default=11111)
@@ -16,4 +16,4 @@ if __name__ == '__main__':
 
     logging.getLogger().setLevel(logging.DEBUG)
 
-    PlayerServer(args.platform, args.filename, args.ip, args.port, args.gui).play()
+    PlayerServer(player_platform_from_string(args.platform), args.filename, args.ip, args.port, args.gui).play()
