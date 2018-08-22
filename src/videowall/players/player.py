@@ -76,6 +76,7 @@ class Player(object):
         self._pipeline.set_state(Gst.State.NULL)
 
     def is_playing(self):
+        return True
         return self._pipeline.get_state(Gst.CLOCK_TIME_NONE).state == Gst.State.PLAYING
 
     def get_filename(self):
