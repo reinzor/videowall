@@ -1,0 +1,27 @@
+#!/usr/bin/env python
+
+import logging
+import time
+from argparse import ArgumentParser
+from videowall.networking import NetworkingServer
+from videowall.networking.message_definition import BroadcastMessage
+
+if __name__ == '__main__':
+    parser = ArgumentParser()
+
+    parser.add_argument('--broadcast_port', type=int, default=2000)
+    parser.add_argument('--interval', type=float, default=1.0)
+
+    args = parser.parse_args()
+
+    logging.getLogger().setLevel(logging.DEBUG)
+
+    server = NetworkingServer(args.broadcast_port)
+    while True:
+        server.send_broadcast(BroadcastMessage(
+            filename="file.mp4",
+            base_time=int(time.time() / 1e-9),
+            player_ip="127.0.0.1",
+            player_port=5000
+        ))
+        time.sleep(args.interval)

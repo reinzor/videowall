@@ -1,0 +1,19 @@
+#!/usr/bin/env python
+
+import logging
+from argparse import ArgumentParser
+from videowall.players import PlayerClient, PlayerPlatform
+
+if __name__ == '__main__':
+    parser = ArgumentParser()
+    parser.add_argument('platform', type=PlayerPlatform, choices=list(PlayerPlatform))
+    parser.add_argument('filename')
+    parser.add_argument('basetime', type=int)
+    parser.add_argument('--ip', default='127.0.0.1')
+    parser.add_argument('--port', type=int, default=11111)
+
+    args = parser.parse_args()
+
+    logging.getLogger().setLevel(logging.DEBUG)
+
+    PlayerClient(args.platform, args.filename, args.basetime, args.ip, args.port).play()
