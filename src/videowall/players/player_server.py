@@ -1,5 +1,5 @@
 import logging
-from gi.repository import Gst, GstNet
+from videowall.gi_version import Gst, GstNet
 
 from .player import Player
 
@@ -23,3 +23,6 @@ class PlayerServer(Player):
 
         self._pipeline.set_start_time(Gst.CLOCK_TIME_NONE)
         self._pipeline.set_base_time(self._base_time)
+
+    def get_base_time(self):
+        return self._base_time

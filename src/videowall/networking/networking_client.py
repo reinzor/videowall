@@ -2,8 +2,8 @@ import json
 import logging
 import socket
 
-from message_definition import BroadcastMessage
-from networking_exceptions import NetworkingException
+from .message_definition import BroadcastMessage
+from .networking_exceptions import NetworkingException
 
 logger = logging.getLogger(__name__)
 
@@ -16,6 +16,8 @@ class NetworkingClient(object):
         self._buffer_size = buffer_size
 
     def receive_broadcast(self):
+        logger.debug("waiting for broadcast message ...")
+
         data, _ = self._socket.recvfrom(self._buffer_size)
 
         try:

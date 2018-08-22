@@ -1,8 +1,8 @@
 import logging
-from gi.repository import Gst, GstNet
+from videowall.gi_version import Gst, GstNet
 
-from player import Player
-from player_exceptions import PlayerException
+from .player import Player
+from .player_exceptions import PlayerException
 
 logger = logging.getLogger(__name__)
 

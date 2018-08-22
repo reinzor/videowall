@@ -1,10 +1,11 @@
 import logging
 import os.path
 import socket
-from gi.repository import Gst
 
-from player_exceptions import PlayerException
-from player_platforms import PlayerPlatform
+from videowall.gi_version import Gst, GObject
+
+from .player_exceptions import PlayerException
+from .player_platforms import PlayerPlatform
 
 logger = logging.getLogger(__name__)
 
@@ -38,6 +39,10 @@ class Player(object):
         self._port = port
         self._pipeline = self._get_pipeline(filename, player_platform, gui)
 
+        self._bus = self._pipeline.get_bus()
+        self._watch_id = self._bus.connect("message", self._on_bus_msg)
+        self._bus.add_signal_watch()
+
         logger.debug("Player constructed")
 
     @staticmethod
@@ -60,7 +65,24 @@ class Player(object):
         pipeline.set_state(Gst.State.PAUSED)
         return pipeline
 
+    def _on_bus_msg(self, bus, msg):
+        if msg is not None:
+            if msg.type is Gst.MessageType.EOS:
+                logger.debug("Received EOS message")
+
     def play(self):
         self._pipeline.set_state(Gst.State.PLAYING)
         self._pipeline.get_bus().poll(Gst.MessageType.EOS | Gst.MessageType.ERROR, Gst.CLOCK_TIME_NONE)
         self._pipeline.set_state(Gst.State.NULL)
+
+    def is_playing(self):
+        return self._pipeline.get_state(Gst.CLOCK_TIME_NONE).state == Gst.State.PLAYING
+
+    def get_filename(self):
+        return self._filename
+
+    def get_ip(self):
+        return self._ip
+
+    def get_port(self):
+        return self._port

@@ -1,11 +1,4 @@
-import gi
 import logging.config
-
-from client import Client
-from server import Server
-
-gi.require_version('Gst', '1.0')
-gi.require_version('GstNet', '1.0')
 
 logging.config.dictConfig({
     'version': 1,

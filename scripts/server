@@ -1,57 +1,26 @@
 #!/usr/bin/env python
 
-
-import sys
-from players import MasterPlayer
-from gi.repository import GObject
-import json
-
-import time
-import threading
-import select
-import socket
-
-
-class MasterThread(threading.Thread):
-    def __init__(self, uri, broadcast_port, player_ip, player_port):
-        super(MasterThread, self).__init__()
-        self.master_player = MasterPlayer(uri, player_ip, player_port)
-        self.broadcast_port = broadcast_port
-
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
-        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-
-    def send_update(self):
-        pdu = {
-            'base-time': self.master_player.base_time,
-            'uri': self.master_player.uri,
-            'player-ip': self.master_player.ip,
-            'player-port': self.master_player.port,
-        }
-        self.socket.sendto(json.dumps(pdu), ('<broadcast>', self.broadcast_port))
-
-    def run(self):
-        self.master_player.play()
-        while True:
-            self.send_update()
-            time.sleep(1)
-
-
+import logging
 from argparse import ArgumentParser
 
-if __name__ == "__main__":
+from videowall.players import PlayerPlatform
+from videowall.server import Server
+
+if __name__ == '__main__':
     parser = ArgumentParser()
-    parser.add_argument('uri')
-    parser.add_argument('--broadcast_port', type=int, default=37020)
-    parser.add_argument('--player_ip', default='localhost')
+    parser.add_argument('player_platform', type=PlayerPlatform, choices=list(PlayerPlatform))
+    parser.add_argument('filename')
+    parser.add_argument('--player_ip', default='127.0.0.1')
     parser.add_argument('--player_port', type=int, default=11111)
+    parser.add_argument('--gui', action='store_true')
+    parser.add_argument('--verbose', action='store_true')
+    parser.add_argument('--broadcast_port', type=int, default=2000)
+    parser.add_argument('--broadcast_interval', type=float, default=1.0)
 
     args = parser.parse_args()
 
-    GObject.threads_init()
-    loop = GObject.MainLoop()
+    if args.verbose:
+        logging.getLogger().setLevel(logging.DEBUG)
 
-    master = MasterThread(args.uri, args.broadcast_port, args.player_ip, args.player_port)
-    master.start()
-
-    loop.run()
+    Server(args.broadcast_port, args.broadcast_interval, args.player_platform, args.filename, args.player_ip,
+           args.player_port, args.gui).run()
