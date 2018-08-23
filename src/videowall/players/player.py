@@ -134,9 +134,6 @@ class Player(object):
         self._pipeline.set_base_time(base_time + seek_time)  # TODO: Figure out why this works
 
     def _seek(self, seek_time):
-        if seek_time == 0:
-            return
-
         logger.info("Seeking to %d", seek_time)
         self._pipeline.seek_simple(Gst.Format.TIME, Gst.SeekFlags.FLUSH | Gst.SeekFlags.ACCURATE, seek_time)
 
