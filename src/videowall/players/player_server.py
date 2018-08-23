@@ -20,7 +20,4 @@ class PlayerServer(Player):
         self._clock_provider = GstNet.NetTimeProvider.new(self._clock, None, port)
 
     def play(self):
-        self._base_time = self._clock.get_time()
-        self._pipeline.set_start_time(Gst.CLOCK_TIME_NONE)
-        self._pipeline.set_base_time(self._base_time)
-        self._pipeline.set_state(Gst.State.PLAYING)
+        super(PlayerServer, self).play(self._clock.get_time())

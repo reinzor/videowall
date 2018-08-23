@@ -82,12 +82,19 @@ class Player(object):
             if msg.type is Gst.MessageType.EOS:
                 logger.info("Received EOS message")
 
+    def play(self, base_time):
+        self._base_time = base_time
+        self._pipeline.set_start_time(Gst.CLOCK_TIME_NONE)
+        self._pipeline.set_base_time(base_time)
+        self._pipeline.set_state(Gst.State.PLAYING)
+
     def stop(self):
         self._pipeline.set_state(Gst.State.NULL)
 
     def is_playing(self):
-        logger.debug("Player state %s", self._pipeline.get_state(Gst.CLOCK_TIME_NONE))
-        return self._pipeline.get_state(Gst.CLOCK_TIME_NONE).state == Gst.State.PLAYING
+        _, state, _ = self._pipeline.get_state(Gst.CLOCK_TIME_NONE)
+        logger.debug("Player state %s", state)
+        return state == Gst.State.PLAYING
 
     def get_filename(self):
         return self._filename
