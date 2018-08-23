@@ -112,9 +112,6 @@ class Player(object):
         if not any([isinstance(seek_time, t) for t in (int, long)]):
             raise PlayerException("Seek time should be an integer, current value: {}".format(seek_time))
 
-        if seek_time == 0:
-            return 0
-
         while self.get_duration() == 0:
             time.sleep(0.1)  # TODO: Can't we use an other call to wait for the pipeline?
 
