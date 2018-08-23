@@ -33,6 +33,7 @@ Make sure `gstreamer is working properly` by downloading and playing an x264 enc
 
 ```
 wget https://www.sample-videos.com/video/mp4/720/big_buck_bunny_720p_30mb.mp4 -O ~/big_buck_bunny_720p_30mb.mp4
+gst-launch-1.0 filesrc location=/tmp/big_buck_bunny_720p_30mb.mp4 ! qtdemux ! h264parse ! omxh264dec ! videoconvert ! queue ! ximagesink
 ```
 
 #### Set-up videowall
