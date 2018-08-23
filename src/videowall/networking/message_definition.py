@@ -22,6 +22,10 @@ class VideocropConfig(Message):
         self.right = int(right)
         self.top = int(top)
 
+    @staticmethod
+    def get_default():
+        return VideocropConfig(0, 0, 0, 0)
+
 
 class ClientConfig(Message):
     def __init__(self, videocrop_config):
@@ -29,7 +33,7 @@ class ClientConfig(Message):
 
     @staticmethod
     def get_default():
-        return ClientConfig(VideocropConfig(0, 0, 0, 0))
+        return ClientConfig(VideocropConfig.get_default().to_dict())
 
 
 class BroadcastMessage(Message):
