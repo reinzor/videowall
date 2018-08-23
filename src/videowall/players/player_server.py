@@ -15,11 +15,12 @@ class PlayerServer(Player):
                      player_platform, filename, self._base_time, ip, port)
 
     def _setup_net_time_provider(self, port):
-        clock = Gst.SystemClock.obtain()
-        self._pipeline.use_clock(clock)
-        self._clock_provider = GstNet.NetTimeProvider.new(clock, None, port)
+        self._clock = Gst.SystemClock.obtain()
+        self._pipeline.use_clock(self._clock)
+        self._clock_provider = GstNet.NetTimeProvider.new(self._clock, None, port)
 
-        self._base_time = clock.get_time()
-
+    def play(self):
+        self._base_time = self._clock.get_time()
         self._pipeline.set_start_time(Gst.CLOCK_TIME_NONE)
         self._pipeline.set_base_time(self._base_time)
+        self._pipeline.set_state(Gst.State.PLAYING)

@@ -20,15 +20,16 @@ class PlayerClient(Player):
                      player_platform, filename, base_time, ip, port)
 
     def _setup_net_client_clock(self, base_time):
-        self._pipeline.set_start_time(Gst.CLOCK_TIME_NONE)
-
         clock_name = "clock0"
         try:
             clock = GstNet.NetClientClock.new(clock_name, self._ip, self._port, base_time)
         except TypeError as e:
             raise PlayerException("GstNet.NetClientClock.new({}, {}, {}, {}) failed ({}). Set environment variable "
                                   "GST_DEBUG=1 for more info".format(clock_name, self._ip, self._port, base_time, e))
-
-        self.base_time = base_time
-        self._pipeline.set_base_time(base_time)
         self._pipeline.use_clock(clock)
+
+    def play(self, base_time):
+        self._base_time = base_time
+        self._pipeline.set_start_time(Gst.CLOCK_TIME_NONE)
+        self._pipeline.set_base_time(base_time)
+        self._pipeline.set_state(Gst.State.PLAYING)

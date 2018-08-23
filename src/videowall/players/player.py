@@ -1,6 +1,7 @@
 import logging
 import os.path
 import socket
+import threading
 
 from videowall.gi_version import Gst, GObject
 
@@ -44,7 +45,12 @@ class Player(object):
         self._watch_id = self._bus.connect("message", self._on_bus_msg)
         self._bus.add_signal_watch()
 
-        self._player_thread = None
+        def run_player_thread():
+            GObject.MainLoop().run()
+
+        self._player_thread = threading.Thread(target=run_player_thread)
+        self._player_thread.start()
+
         logger.debug("Player constructed")
 
     @staticmethod
@@ -56,6 +62,7 @@ class Player(object):
         elif player_platform == PlayerPlatformRaspberryPi:
             launch_cmd += " ! qtdemux ! h264parse ! omxh264dec"
 
+        gui = True  # TODO: Remove, first get GTK to work properly
         if gui:
             if os.environ.get('DISPLAY') is None:
                 raise PlayerException("No $DISPLAY environment variable is set, the ximagesink will not work")
@@ -73,10 +80,10 @@ class Player(object):
     def _on_bus_msg(self, bus, msg):
         if msg is not None:
             if msg.type is Gst.MessageType.EOS:
-                logger.debug("Received EOS message")
+                logger.info("Received EOS message")
 
-    def play(self):
-        self._pipeline.set_state(Gst.State.PLAYING)
+    def stop(self):
+        self._pipeline.set_state(Gst.State.NULL)
 
     def is_playing(self):
         logger.debug("Player state %s", self._pipeline.get_state(Gst.CLOCK_TIME_NONE))

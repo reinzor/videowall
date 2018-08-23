@@ -16,16 +16,17 @@ class Server(object):
         self._broadcast_interval = broadcast_interval
 
     def run(self):
-        self._player.play()
-        logger.debug("Started player, broadcasting with interval %.2f [seconds] ..", self._broadcast_interval)
+        while True:
+            self._player.play()
+            logger.debug("Started player, broadcasting with interval %.2f [seconds] ..", self._broadcast_interval)
 
-        while self._player.is_playing():
-            self._networking.send_broadcast(BroadcastMessage(
-                filename=self._player.get_filename(),
-                base_time=self._player.get_base_time(),
-                player_ip=self._player.get_ip(),
-                player_port=self._player.get_port()
-            ))
-            time.sleep(self._broadcast_interval)
+            while self._player.is_playing():
+                self._networking.send_broadcast(BroadcastMessage(
+                    filename=self._player.get_filename(),
+                    base_time=self._player.get_base_time(),
+                    player_ip=self._player.get_ip(),
+                    player_port=self._player.get_port()
+                ))
+                time.sleep(self._broadcast_interval)
 
-        logger.debug("Player not playing anymore, waiting for thread join ...")
+            logger.debug("Player not playing anymore, looping ...")
