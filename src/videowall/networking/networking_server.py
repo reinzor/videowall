@@ -19,4 +19,4 @@ class NetworkingServer(object):
             raise NetworkingException("msg ({}) is not of type NetworkingException".format(msg))
 
         logger.debug("Sending %s", msg)
-        self._socket.sendto(json.dumps(msg._asdict()), ('<broadcast>', self._broadcast_port))
+        self._socket.sendto(json.dumps(msg.to_dict()), ('<broadcast>', self._broadcast_port))
