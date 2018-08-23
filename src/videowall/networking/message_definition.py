@@ -9,8 +9,10 @@ class Message(object):
 
 
 class BroadcastMessage(Message):
-    def __init__(self, filename, base_time, player_ip, player_port):
+    def __init__(self, filename, base_time, position, duration, player_ip, player_port):
         self.filename = filename
         self.base_time = int(base_time)
+        self.position = int(position)
+        self.duration = int(duration)
         self.player_ip = player_ip
         self.player_port = int(player_port)

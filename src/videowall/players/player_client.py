@@ -8,21 +8,18 @@ logger = logging.getLogger(__name__)
 
 
 class PlayerClient(Player):
-    def __init__(self, player_platform, filename, base_time, ip, port):
+    def __init__(self, player_platform, filename, ip, port):
         super(PlayerClient, self).__init__(player_platform, filename, ip, port, True)
 
-        if not isinstance(base_time, int) and not isinstance(base_time, long):
-            raise PlayerException("Base time should be an integer, current value: {}".format(base_time))
+        self._setup_net_client_clock()
 
-        self._setup_net_client_clock(base_time)
+        logger.debug("PlayerClient(player_platform=%s, filename=%s, ip=%s, port=%s) constructed",
+                     player_platform, filename, ip, port)
 
-        logger.debug("PlayerClient(player_platform=%s, filename=%s, base_time=%d, ip=%s, port=%s) constructed",
-                     player_platform, filename, base_time, ip, port)
-
-    def _setup_net_client_clock(self, base_time):
+    def _setup_net_client_clock(self):
         clock_name = "clock0"
         try:
-            clock = GstNet.NetClientClock.new(clock_name, self._ip, self._port, base_time)
+            clock = GstNet.NetClientClock.new(clock_name, self._ip, self._port, 0)
         except TypeError as e:
             raise PlayerException("GstNet.NetClientClock.new({}, {}, {}, {}) failed ({}). Set environment variable "
                                   "GST_DEBUG=1 for more info".format(clock_name, self._ip, self._port, base_time, e))

@@ -8,6 +8,7 @@ if __name__ == '__main__':
     parser = ArgumentParser()
     parser.add_argument('platform', choices=get_player_platform_strings())
     parser.add_argument('filename')
+    parser.add_argument('--seek_time', type=int, default=0)
     parser.add_argument('--ip', default='127.0.0.1')
     parser.add_argument('--port', type=int, default=11111)
     parser.add_argument('--gui', action='store_true')
@@ -16,4 +17,6 @@ if __name__ == '__main__':
 
     logging.getLogger().setLevel(logging.DEBUG)
 
-    PlayerServer(player_platform_from_string(args.platform), args.filename, args.ip, args.port, args.gui).play()
+    PlayerServer(player_platform_from_string(args.platform), args.filename, args.ip, args.port, args.gui).play(
+        seek_time=args.seek_time
+    )

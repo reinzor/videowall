@@ -2,6 +2,7 @@ import logging
 import os.path
 import socket
 import threading
+import time
 
 from videowall.gi_version import Gst, GObject
 
@@ -40,6 +41,7 @@ class Player(object):
         self._port = port
         self._base_time = None
         self._pipeline = self._get_pipeline(filename, player_platform, gui)
+        self._set_pipeline_state(Gst.State.PAUSED)
 
         self._bus = self._pipeline.get_bus()
         self._watch_id = self._bus.connect("message", self._on_bus_msg)
@@ -74,22 +76,47 @@ class Player(object):
         logger.debug("Creating pipeline from launch command %s ..", launch_cmd)
 
         pipeline = Gst.parse_launch(launch_cmd)
-        pipeline.set_state(Gst.State.PAUSED)
         return pipeline
 
     def _on_bus_msg(self, bus, msg):
         if msg is not None:
             if msg.type is Gst.MessageType.EOS:
-                logger.info("Received EOS message")
+                logger.info("Received EOS message, stopping player")
+                self.stop()
 
-    def play(self, base_time):
+    def _set_pipeline_state(self, state):
+        logger.info("Setting the pipeline state to %s", state)
+        self._pipeline.set_state(state)
+
+    def _set_base_time(self, base_time, seek_time):
+        if not any([isinstance(base_time, t) for t in (int, long)]):
+            raise PlayerException("Base time should be an integer, current value: {}".format(base_time))
+
+        logger.info("Setting base time to %d", base_time)
         self._base_time = base_time
         self._pipeline.set_start_time(Gst.CLOCK_TIME_NONE)
-        self._pipeline.set_base_time(base_time)
-        self._pipeline.set_state(Gst.State.PLAYING)
+        self._pipeline.set_base_time(base_time + seek_time)  # TODO: Figure out why this works
+
+    def seek(self, seek_time):
+        if not any([isinstance(seek_time, t) for t in (int, long)]):
+            raise PlayerException("Seek time should be an integer, current value: {}".format(seek_time))
+
+        self._set_pipeline_state(Gst.State.PAUSED)
+
+        while self.get_duration() == 0:
+            time.sleep(0.1)  # TODO: Can't we use an other call to wait for the pipeline?
+
+        logger.info("Seeking to %d - duration=%d", seek_time, self.get_duration())
+        self._pipeline.seek_simple(Gst.Format.TIME, Gst.SeekFlags.FLUSH | Gst.SeekFlags.ACCURATE, seek_time)
+
+    def play(self, base_time, seek_time):
+        self.seek(seek_time)
+        self._set_base_time(base_time, seek_time)
+
+        self._set_pipeline_state(Gst.State.PLAYING)
 
     def stop(self):
-        self._pipeline.set_state(Gst.State.NULL)
+        self._set_pipeline_state(Gst.State.PAUSED)
 
     def is_playing(self):
         _, state, _ = self._pipeline.get_state(Gst.CLOCK_TIME_NONE)
@@ -107,3 +134,11 @@ class Player(object):
 
     def get_base_time(self):
         return self._base_time
+
+    def get_position(self):
+        _, position = self._pipeline.query_position(Gst.Format.TIME)
+        return position
+
+    def get_duration(self):
+        _, duration = self._pipeline.query_duration(Gst.Format.TIME)
+        return duration

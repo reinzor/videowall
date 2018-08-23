@@ -24,6 +24,8 @@ class Server(object):
                 self._networking.send_broadcast(BroadcastMessage(
                     filename=self._player.get_filename(),
                     base_time=self._player.get_base_time(),
+                    position=self._player.get_position(),
+                    duration=self._player.get_duration(),
                     player_ip=self._player.get_ip(),
                     player_port=self._player.get_port()
                 ))

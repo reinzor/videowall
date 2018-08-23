@@ -19,8 +19,10 @@ class Client(object):
 
             # This can be done in the constructor in the future if we can set filesrcs dynamically
             if self._player is None:
-                self._player = PlayerClient(self._player_platform, msg.filename, msg.base_time, msg.player_ip,
-                                            msg.player_port)
+                self._player = PlayerClient(self._player_platform, msg.filename, msg.player_ip, msg.player_port)
 
             if self._player.get_base_time() != msg.base_time:
-                self._player.play(msg.base_time)
+                self._player.play(
+                    base_time=msg.base_time,
+                    seek_time=msg.position
+                )
