@@ -37,12 +37,14 @@ class Player(object):
         self._filename = filename
         self._ip = ip
         self._port = port
+        self._base_time = None
         self._pipeline = self._get_pipeline(filename, player_platform, gui)
 
         self._bus = self._pipeline.get_bus()
         self._watch_id = self._bus.connect("message", self._on_bus_msg)
         self._bus.add_signal_watch()
 
+        self._player_thread = None
         logger.debug("Player constructed")
 
     @staticmethod
@@ -75,11 +77,9 @@ class Player(object):
 
     def play(self):
         self._pipeline.set_state(Gst.State.PLAYING)
-        self._pipeline.get_bus().poll(Gst.MessageType.EOS | Gst.MessageType.ERROR, Gst.CLOCK_TIME_NONE)
-        self._pipeline.set_state(Gst.State.NULL)
 
     def is_playing(self):
-        return True
+        logger.debug("Player state %s", self._pipeline.get_state(Gst.CLOCK_TIME_NONE))
         return self._pipeline.get_state(Gst.CLOCK_TIME_NONE).state == Gst.State.PLAYING
 
     def get_filename(self):
@@ -90,3 +90,6 @@ class Player(object):
 
     def get_port(self):
         return self._port
+
+    def get_base_time(self):
+        return self._base_time

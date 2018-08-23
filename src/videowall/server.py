@@ -1,5 +1,4 @@
 import logging
-import threading
 import time
 
 from .networking import NetworkingServer
@@ -17,10 +16,8 @@ class Server(object):
         self._broadcast_interval = broadcast_interval
 
     def run(self):
-        logger.debug("Starting player thread ..")
-        player_thread = threading.Thread(target=self._player.play)
-        player_thread.start()
-        logger.debug("Started player thread, broadcasting with interval %.2f [seconds] ..", self._broadcast_interval)
+        self._player.play()
+        logger.debug("Started player, broadcasting with interval %.2f [seconds] ..", self._broadcast_interval)
 
         while self._player.is_playing():
             self._networking.send_broadcast(BroadcastMessage(
@@ -32,4 +29,3 @@ class Server(object):
             time.sleep(self._broadcast_interval)
 
         logger.debug("Player not playing anymore, waiting for thread join ...")
-        player_thread.join()

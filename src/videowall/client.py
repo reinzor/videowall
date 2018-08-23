@@ -16,7 +16,9 @@ class Client(object):
     def run(self):
         while True:
             msg = self._networking.receive_broadcast()
-            if self._player is None or self._player.get_filename() != msg.filename:
+            if self._player is None:
                 self._player = PlayerClient(self._player_platform, msg.filename, msg.base_time, msg.player_ip,
                                             msg.player_port)
-                self._player.play()
+
+            if self._player.get_filename() != msg.filename or self._player.get_base_time() != msg.base_time:
+                self._player.play()  # Maybe also add filename and base time here?

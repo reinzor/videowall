@@ -29,5 +29,6 @@ class PlayerClient(Player):
             raise PlayerException("GstNet.NetClientClock.new({}, {}, {}, {}) failed ({}). Set environment variable "
                                   "GST_DEBUG=1 for more info".format(clock_name, self._ip, self._port, base_time, e))
 
+        self.base_time = base_time
         self._pipeline.set_base_time(base_time)
         self._pipeline.use_clock(clock)
