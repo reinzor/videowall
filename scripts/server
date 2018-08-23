@@ -16,7 +16,7 @@ if __name__ == '__main__':
     parser.add_argument('--verbose', action='store_true')
     parser.add_argument('--broadcast_port', type=int, default=2000)
     parser.add_argument('--broadcast_interval', type=float, default=1.0)
-    parser.add_argument('--client_seek_lookahead', type=int, default=2000000000)
+    parser.add_argument('--client_seek_lookahead', type=int, default=5000000000)
 
     args = parser.parse_args()
 
