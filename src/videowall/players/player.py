@@ -95,11 +95,14 @@ class Player(object):
         pipeline = Gst.parse_launch(launch_cmd)
         return pipeline
 
+    def _eos_callback(self, bus, msg):
+        pass
+
     def _on_bus_msg(self, bus, msg):
         if msg is not None:
             if msg.type is Gst.MessageType.EOS:
-                logger.info("Received EOS message, stopping player")
-                self.stop()
+                logger.info("Gst.MessageType.EOS")
+                self._eos_callback(bus, msg)
 
     def _set_pipeline_state(self, state):
         logger.info("Setting the pipeline state to %s", state)
@@ -116,15 +119,7 @@ class Player(object):
             raise PlayerException("Invalid seek_time {}. The value should be between {} and {}",
                                   seek_time, 0, self.get_duration())
 
-        delta = self.get_position() - seek_time
-        if abs(delta) <= self._seek_grace_time:
-            logger.info("Skipping seek: abs value of delta %d < sync grace time %d", delta, self._seek_grace_time)
-            return False, 0
-        else:
-            updated_seek_time = min(self.get_duration(), seek_time + self._seek_lookahead)
-            logger.info("Updating seek time to %d (seek_time=%d, seek_lookahead=%d)", updated_seek_time, seek_time,
-                        self._seek_lookahead)
-            return True, updated_seek_time
+        return min(self.get_duration(), seek_time + self._seek_lookahead)
 
     def _set_base_time(self, base_time, seek_time):
         if not any([isinstance(base_time, t) for t in (int, long)]):
@@ -137,16 +132,13 @@ class Player(object):
 
     def _seek(self, seek_time):
         logger.info("Seeking to %d", seek_time)
-        self._set_pipeline_state(Gst.State.PAUSED)
-        self._pipeline.seek_simple(Gst.Format.TIME, Gst.SeekFlags.FLUSH, seek_time)
+        self._pipeline.seek_simple(Gst.Format.TIME, Gst.SeekFlags.FLUSH | Gst.SeekFlags.ACCURATE, seek_time)
 
     def play(self, base_time, seek_time):
-        should_seek, updated_seek_time = self._get_updated_seek_time(seek_time)
+        updated_seek_time = self._get_updated_seek_time(seek_time)
 
+        self._seek(updated_seek_time)
         self._set_base_time(base_time, updated_seek_time)
-
-        if should_seek:
-            self._seek(updated_seek_time)
 
         self._set_pipeline_state(Gst.State.PLAYING)
 

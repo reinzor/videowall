@@ -24,3 +24,6 @@ class PlayerServer(Player):
             base_time=self._clock.get_time(),
             seek_time=seek_time
         )
+
+    def _eos_callback(self, bus, msg):
+        self._set_pipeline_state(Gst.State.PAUSED)
