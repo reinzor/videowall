@@ -106,7 +106,11 @@ class Player(object):
         while self.get_duration() == 0:
             time.sleep(0.1)  # TODO: Can't we use an other call to wait for the pipeline?
 
-        logger.info("Seeking to %d - duration=%d", seek_time, self.get_duration())
+        if 0 < seek_time > self.get_duration():
+            raise PlayerException("Invalid seek_time {}. The value should be between {} and {}",
+                                  seek_time, 0, self.get_duration())
+
+        logger.info("Seeking to %d", seek_time)
         self._pipeline.seek_simple(Gst.Format.TIME, Gst.SeekFlags.FLUSH | Gst.SeekFlags.ACCURATE, seek_time)
 
     def play(self, base_time, seek_time):

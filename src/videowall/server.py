@@ -9,11 +9,13 @@ logger = logging.getLogger(__name__)
 
 
 class Server(object):
-    def __init__(self, broadcast_port, broadcast_interval, player_platform, filename, player_ip, player_port, gui):
+    def __init__(self, broadcast_port, broadcast_interval, player_platform, filename, player_ip, player_port, gui,
+                 client_seek_lookahead):
         self._networking = NetworkingServer(broadcast_port)
         self._player = PlayerServer(player_platform, filename, player_ip, player_port, gui)
 
         self._broadcast_interval = broadcast_interval
+        self._client_seek_lookahead = client_seek_lookahead
 
     def run(self):
         while True:
@@ -27,7 +29,8 @@ class Server(object):
                     position=self._player.get_position(),
                     duration=self._player.get_duration(),
                     player_ip=self._player.get_ip(),
-                    player_port=self._player.get_port()
+                    player_port=self._player.get_port(),
+                    seek_lookahead=self._client_seek_lookahead
                 ))
                 time.sleep(self._broadcast_interval)
 
