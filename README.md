@@ -59,6 +59,12 @@ Set boot config RPI so we can use more GPU memory (not sure whether this has any
 echo "gpu_mem = 386MB" | sudo tee -a /boot/config.txt
 ```
 
+We should also net forget to set the `$DISPLAY` environment variable in order to connect with the `x-server` properly:
+
+```
+export DISPLAY=:0
+```
+
 ## Quick start
 
 ### Server
