@@ -23,6 +23,7 @@ class Client(object):
                                             msg.seek_grace_time, msg.seek_lookahead)
 
             if self._player.get_base_time() != msg.base_time:
+                logger.info("Received an updated base time, sending new play command to player ...")
                 self._player.play(
                     base_time=msg.base_time,
                     seek_time=msg.position

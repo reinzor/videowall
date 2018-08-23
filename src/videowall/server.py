@@ -21,7 +21,7 @@ class Server(object):
     def run(self):
         while True:
             self._player.play()
-            logger.debug("Started player, broadcasting with interval %.2f [seconds] ..", self._broadcast_interval)
+            logger.info("Started player, broadcasting with interval %.2f [seconds] ..", self._broadcast_interval)
 
             while self._player.is_playing():
                 self._networking.send_broadcast(BroadcastMessage(
@@ -36,4 +36,4 @@ class Server(object):
                 ))
                 time.sleep(self._broadcast_interval)
 
-            logger.debug("Player not playing anymore, looping ...")
+            logger.info("Player not playing anymore, looping ...")
