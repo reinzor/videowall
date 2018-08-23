@@ -96,21 +96,12 @@ class Player(object):
         logger.info("Setting the pipeline state to %s", state)
         self._pipeline.set_state(state)
 
-    def _set_base_time(self, base_time, seek_time):
-        if not any([isinstance(base_time, t) for t in (int, long)]):
-            raise PlayerException("Base time should be an integer, current value: {}".format(base_time))
-
-        logger.info("Setting base time to %d", base_time)
-        self._base_time = base_time
-        self._pipeline.set_start_time(Gst.CLOCK_TIME_NONE)
-        self._pipeline.set_base_time(base_time + seek_time)  # TODO: Figure out why this works
-
-    def seek(self, seek_time):
+    def _get_updated_seek_time(self, seek_time):
         if not any([isinstance(seek_time, t) for t in (int, long)]):
             raise PlayerException("Seek time should be an integer, current value: {}".format(seek_time))
 
         if seek_time == 0:
-            return
+            return 0
 
         while self.get_duration() == 0:
             time.sleep(0.1)  # TODO: Can't we use an other call to wait for the pipeline?
@@ -122,16 +113,35 @@ class Player(object):
         delta = self.get_position() - seek_time
         if abs(delta) < self._seek_grace_time:
             logger.info("Skipping seek: abs value of delta %d < sync grace time %d", delta, self._seek_grace_time)
+            return 0
         else:
-            corrected_seek_time = min(self.get_duration(), seek_time + self._seek_lookahead)
-            logger.info("Seeking to %d (seek_time=%d, seek_lookahead=%d)", corrected_seek_time, seek_time,
+            updated_seek_time = min(self.get_duration(), seek_time + self._seek_lookahead)
+            logger.info("Updating seek time to %d (seek_time=%d, seek_lookahead=%d)", updated_seek_time, seek_time,
                         self._seek_lookahead)
-            self._set_pipeline_state(Gst.State.PAUSED)
-            self._pipeline.seek_simple(Gst.Format.TIME, Gst.SeekFlags.FLUSH, seek_time)
+            return updated_seek_time
+
+    def _set_base_time(self, base_time, seek_time):
+        if not any([isinstance(base_time, t) for t in (int, long)]):
+            raise PlayerException("Base time should be an integer, current value: {}".format(base_time))
+
+        logger.info("Setting base time to %d", base_time)
+        self._base_time = base_time
+        self._pipeline.set_start_time(Gst.CLOCK_TIME_NONE)
+        self._pipeline.set_base_time(base_time + seek_time)  # TODO: Figure out why this works
+
+    def _seek(self, seek_time):
+        if seek_time == 0:
+            return
+
+        logger.info("Seeking to %d", seek_time)
+        self._set_pipeline_state(Gst.State.PAUSED)
+        self._pipeline.seek_simple(Gst.Format.TIME, Gst.SeekFlags.FLUSH, seek_time)
 
     def play(self, base_time, seek_time):
-        self._set_base_time(base_time, seek_time)
-        self.seek(seek_time)
+        updated_seek_time = self._get_updated_seek_time(seek_time)
+
+        self._set_base_time(base_time, updated_seek_time)
+        self._seek(updated_seek_time)
         self._set_pipeline_state(Gst.State.PLAYING)
 
     def stop(self):
