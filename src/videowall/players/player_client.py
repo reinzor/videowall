@@ -8,8 +8,8 @@ logger = logging.getLogger(__name__)
 
 
 class PlayerClient(Player):
-    def __init__(self, player_platform, filename, ip, port):
-        super(PlayerClient, self).__init__(player_platform, filename, ip, port, True)
+    def __init__(self, player_platform, filename, ip, port, seek_grace_time, seek_lookahead):
+        super(PlayerClient, self).__init__(player_platform, filename, ip, port, True, seek_grace_time, seek_lookahead)
 
         self._setup_net_client_clock()
 

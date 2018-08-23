@@ -2,6 +2,7 @@
 
 import logging
 from argparse import ArgumentParser
+
 from videowall.players import PlayerClient, get_player_platform_strings, player_platform_from_string
 
 if __name__ == '__main__':
@@ -10,6 +11,7 @@ if __name__ == '__main__':
     parser.add_argument('filename')
     parser.add_argument('base_time', type=int)
     parser.add_argument('--seek_time', type=int, default=0)
+    parser.add_argument('--seek_grace_time', type=int, default=500000000)
     parser.add_argument('--ip', default='127.0.0.1')
     parser.add_argument('--port', type=int, default=11111)
 
@@ -17,7 +19,8 @@ if __name__ == '__main__':
 
     logging.getLogger().setLevel(logging.DEBUG)
 
-    PlayerClient(player_platform_from_string(args.platform), args.filename, args.ip, args.port).play(
+    PlayerClient(player_platform_from_string(args.platform), args.filename, args.ip, args.port,
+                 args.seek_grace_time).play(
         base_time=args.base_time,
         seek_time=args.seek_time,
     )

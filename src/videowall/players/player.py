@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 class Player(object):
     Gst.init(None)
 
-    def __init__(self, player_platform, filename, ip, port, gui):
+    def __init__(self, player_platform, filename, ip, port, gui, seek_grace_time, seek_lookahead):
         if not issubclass(player_platform, PlayerPlatform):
             raise PlayerException("Invalid player platform {}, available platforms: {}".format(player_platform,
                                                                                                get_player_platforms()))
@@ -35,11 +35,19 @@ class Player(object):
         if not isinstance(gui, bool):
             raise PlayerException("GUI should be a boolean")
 
+        if not isinstance(seek_grace_time, int):
+            raise PlayerException("Seek grace time should be an integer, current value: {}".format(seek_grace_time))
+
+        if not isinstance(seek_lookahead, int):
+            raise PlayerException("Seek lookahead should be an integer, current value: {}".format(seek_lookahead))
+
         self._player_platform = player_platform
         self._filename = filename
         self._ip = ip
         self._port = port
         self._base_time = None
+        self._seek_grace_time = seek_grace_time
+        self._seek_lookahead = seek_lookahead
         self._pipeline = self._get_pipeline(filename, player_platform, gui)
         self._set_pipeline_state(Gst.State.PAUSED)
 
@@ -104,17 +112,22 @@ class Player(object):
         if seek_time == 0:
             return
 
-        self._set_pipeline_state(Gst.State.PAUSED)
-
         while self.get_duration() == 0:
             time.sleep(0.1)  # TODO: Can't we use an other call to wait for the pipeline?
 
-        if 0 < seek_time > self.get_duration():
+        if seek_time < 0 or seek_time > self.get_duration():
             raise PlayerException("Invalid seek_time {}. The value should be between {} and {}",
                                   seek_time, 0, self.get_duration())
 
-        logger.info("Seeking to %d", seek_time)
-        self._pipeline.seek_simple(Gst.Format.TIME, Gst.SeekFlags.FLUSH | Gst.SeekFlags.ACCURATE, seek_time)
+        delta = self.get_position() - seek_time
+        if abs(delta) < self._seek_grace_time:
+            logger.info("Skipping seek: abs value of delta %d < sync grace time %d", delta, self._seek_grace_time)
+        else:
+            corrected_seek_time = min(self.get_duration(), seek_time + self._seek_lookahead)
+            logger.info("Seeking to %d (seek_time=%d, seek_lookahead=%d)", corrected_seek_time, seek_time,
+                        self._seek_lookahead)
+            self._set_pipeline_state(Gst.State.PAUSED)
+            self._pipeline.seek_simple(Gst.Format.TIME, Gst.SeekFlags.FLUSH, seek_time)
 
     def play(self, base_time, seek_time):
         self._set_base_time(base_time, seek_time)

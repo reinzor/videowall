@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 class PlayerServer(Player):
     def __init__(self, player_platform, filename, ip, port, gui):
-        super(PlayerServer, self).__init__(player_platform, filename, ip, port, gui)
+        super(PlayerServer, self).__init__(player_platform, filename, ip, port, gui, 0, 0)
         self._setup_net_time_provider(port)
 
         logger.debug("PlayerServer(player_platform=%s, filename=%s, ip=%s, port=%s) constructed",
