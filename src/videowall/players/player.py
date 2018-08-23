@@ -35,10 +35,10 @@ class Player(object):
         if not isinstance(gui, bool):
             raise PlayerException("GUI should be a boolean")
 
-        if not isinstance(seek_grace_time, int):
+        if not any([isinstance(seek_grace_time, t) for t in (int, long)]):
             raise PlayerException("Seek grace time should be an integer, current value: {}".format(seek_grace_time))
 
-        if not isinstance(seek_lookahead, int):
+        if not any([isinstance(seek_lookahead, t) for t in (int, long)]):
             raise PlayerException("Seek lookahead should be an integer, current value: {}".format(seek_lookahead))
 
         self._player_platform = player_platform
