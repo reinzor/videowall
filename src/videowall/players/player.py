@@ -109,6 +109,9 @@ class Player(object):
         if not any([isinstance(seek_time, t) for t in (int, long)]):
             raise PlayerException("Seek time should be an integer, current value: {}".format(seek_time))
 
+        if seek_time == 0:
+            return 0
+
         while self.get_duration() == 0:
             time.sleep(0.1)  # TODO: Can't we use an other call to wait for the pipeline?
 
@@ -117,14 +120,14 @@ class Player(object):
                                   seek_time, 0, self.get_duration())
 
         delta = self.get_position() - seek_time
-        if abs(delta) <= self._seek_grace_time:
+        if abs(delta) < self._seek_grace_time:
             logger.info("Skipping seek: abs value of delta %d < sync grace time %d", delta, self._seek_grace_time)
-            return False, 0
+            return 0
         else:
             updated_seek_time = min(self.get_duration(), seek_time + self._seek_lookahead)
             logger.info("Updating seek time to %d (seek_time=%d, seek_lookahead=%d)", updated_seek_time, seek_time,
                         self._seek_lookahead)
-            return True, updated_seek_time
+            return updated_seek_time
 
     def _set_base_time(self, base_time, seek_time):
         if not any([isinstance(base_time, t) for t in (int, long)]):
@@ -136,18 +139,18 @@ class Player(object):
         self._pipeline.set_base_time(base_time + seek_time)  # TODO: Figure out why this works
 
     def _seek(self, seek_time):
+        if seek_time == 0:
+            return
+
         logger.info("Seeking to %d", seek_time)
         self._set_pipeline_state(Gst.State.PAUSED)
         self._pipeline.seek_simple(Gst.Format.TIME, Gst.SeekFlags.FLUSH, seek_time)
 
     def play(self, base_time, seek_time):
-        should_seek, updated_seek_time = self._get_updated_seek_time(seek_time)
+        updated_seek_time = self._get_updated_seek_time(seek_time)
 
         self._set_base_time(base_time, updated_seek_time)
-
-        if should_seek:
-            self._seek(updated_seek_time)
-
+        self._seek(updated_seek_time)
         self._set_pipeline_state(Gst.State.PLAYING)
 
     def stop(self):
