@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-
+import json
 import logging
 from argparse import ArgumentParser
 
@@ -18,6 +18,7 @@ if __name__ == '__main__':
     parser.add_argument('--broadcast_interval', type=float, default=1.0)
     parser.add_argument('--client_seek_lookahead', type=int, default=5000000000)
     parser.add_argument('--client_seek_grace_time', type=int, default=500000000)
+    parser.add_argument('--client_config', type=json.loads, default='{}')
 
     args = parser.parse_args()
 
@@ -26,4 +27,4 @@ if __name__ == '__main__':
 
     Server(args.broadcast_port, args.broadcast_interval, player_platform_from_string(args.player_platform),
            args.filename, args.player_ip, args.player_port, args.gui, args.client_seek_lookahead,
-           args.client_seek_grace_time).run()
+           args.client_seek_grace_time, args.client_config).run()

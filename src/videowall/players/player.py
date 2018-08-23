@@ -5,6 +5,7 @@ import threading
 import time
 
 from videowall.gi_version import Gst, GObject
+from videowall.networking.message_definition import VideocropConfig
 
 from .player_exceptions import PlayerException
 from .player_platforms import PlayerPlatform, PlayerPlatformX86, PlayerPlatformRaspberryPi, get_player_platforms
@@ -15,9 +16,13 @@ logger = logging.getLogger(__name__)
 class Player(object):
     Gst.init(None)
 
-    def __init__(self, player_platform, filename, ip, port, gui, seek_grace_time, seek_lookahead):
-        if not issubclass(player_platform, PlayerPlatform):
-            raise PlayerException("Invalid player platform {}, available platforms: {}".format(player_platform,
+    def __init__(self, platform, filename, ip, clock_port,
+                 show_gui=True,
+                 seek_grace_time=0,
+                 seek_lookahead=0,
+                 videocrop_config=VideocropConfig(0, 0, 0, 0)):
+        if not issubclass(platform, PlayerPlatform):
+            raise PlayerException("Invalid player platform {}, available platforms: {}".format(platform,
                                                                                                get_player_platforms()))
 
         real_path = os.path.realpath(os.path.expanduser(filename))
@@ -29,10 +34,10 @@ class Player(object):
         except socket.error as e:
             raise PlayerException(e)
 
-        if not isinstance(port, int):
-            raise PlayerException("Port should be an integer, current value: {}".format(port))
+        if not isinstance(clock_port, int):
+            raise PlayerException("Port should be an integer, current value: {}".format(clock_port))
 
-        if not isinstance(gui, bool):
+        if not isinstance(show_gui, bool):
             raise PlayerException("GUI should be a boolean")
 
         if not any([isinstance(seek_grace_time, t) for t in (int, long)]):
@@ -41,14 +46,14 @@ class Player(object):
         if not any([isinstance(seek_lookahead, t) for t in (int, long)]):
             raise PlayerException("Seek lookahead should be an integer, current value: {}".format(seek_lookahead))
 
-        self._player_platform = player_platform
+        self._player_platform = platform
         self._filename = filename
         self._ip = ip
-        self._port = port
+        self._port = clock_port
         self._base_time = None
         self._seek_grace_time = seek_grace_time
         self._seek_lookahead = seek_lookahead
-        self._pipeline = self._get_pipeline(filename, player_platform, gui)
+        self._pipeline = self._get_pipeline(filename, platform, show_gui, videocrop_config)
         self._set_pipeline_state(Gst.State.PAUSED)
 
         self._bus = self._pipeline.get_bus()
@@ -64,7 +69,7 @@ class Player(object):
         logger.debug("Player constructed")
 
     @staticmethod
-    def _get_pipeline(filename, player_platform, gui):
+    def _get_pipeline(filename, player_platform, gui, videocrop_config):
         launch_cmd = "filesrc location={}".format(filename)
 
         if player_platform == PlayerPlatformX86:
@@ -77,6 +82,10 @@ class Player(object):
             if os.environ.get('DISPLAY') is None:
                 raise PlayerException("No $DISPLAY environment variable is set, the ximagesink will not work")
 
+            launch_cmd += " ! videocrop bottom={} left={} right={} top={}".format(videocrop_config.bottom,
+                                                                                  videocrop_config.left,
+                                                                                  videocrop_config.right,
+                                                                                  videocrop_config.top)
             launch_cmd += " ! videoconvert ! queue ! ximagesink"
         else:
             launch_cmd += " ! fakesink"
