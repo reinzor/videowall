@@ -101,6 +101,9 @@ class Player(object):
         if not any([isinstance(seek_time, t) for t in (int, long)]):
             raise PlayerException("Seek time should be an integer, current value: {}".format(seek_time))
 
+        if seek_time == 0:
+            return
+
         self._set_pipeline_state(Gst.State.PAUSED)
 
         while self.get_duration() == 0:
@@ -114,9 +117,8 @@ class Player(object):
         self._pipeline.seek_simple(Gst.Format.TIME, Gst.SeekFlags.FLUSH | Gst.SeekFlags.ACCURATE, seek_time)
 
     def play(self, base_time, seek_time):
-        self.seek(seek_time)
         self._set_base_time(base_time, seek_time)
-
+        self.seek(seek_time)
         self._set_pipeline_state(Gst.State.PLAYING)
 
     def stop(self):

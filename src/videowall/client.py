@@ -24,5 +24,5 @@ class Client(object):
             if self._player.get_base_time() != msg.base_time:
                 self._player.play(
                     base_time=msg.base_time,
-                    seek_time=msg.position + msg.seek_lookahead
+                    seek_time=msg.seek_time
                 )

@@ -26,11 +26,10 @@ class Server(object):
                 self._networking.send_broadcast(BroadcastMessage(
                     filename=self._player.get_filename(),
                     base_time=self._player.get_base_time(),
-                    position=self._player.get_position(),
+                    seek_time=self._player.get_position() + self._client_seek_lookahead,
                     duration=self._player.get_duration(),
                     player_ip=self._player.get_ip(),
                     player_port=self._player.get_port(),
-                    seek_lookahead=self._client_seek_lookahead
                 ))
                 time.sleep(self._broadcast_interval)
 
