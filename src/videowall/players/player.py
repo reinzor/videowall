@@ -55,6 +55,9 @@ class Player(object):
             launch_cmd += " ! qtdemux ! h264parse ! omxh264dec"
 
         if gui:
+            if os.environ.get('DISPLAY') is None:
+                raise PlayerException("No $DISPLAY environment variable is set, the ximagesink will not work")
+
             launch_cmd += " ! videoconvert ! queue ! ximagesink"
         else:
             launch_cmd += " ! fakesink"
