@@ -28,7 +28,7 @@ class Player(object):
             raise PlayerException(e)
 
         if not isinstance(port, int):
-            raise PlayerException("Port should be an integer")
+            raise PlayerException("Port should be an integer, current value: {}".format(port))
 
         if not isinstance(gui, bool):
             raise PlayerException("GUI should be a boolean")

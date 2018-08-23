@@ -12,7 +12,7 @@ class PlayerClient(Player):
         super(PlayerClient, self).__init__(player_platform, filename, ip, port, True)
 
         if not isinstance(base_time, int):
-            raise PlayerException("Base time should be an integer")
+            raise PlayerException("Base time should be an integer, current value: {}".format(base_time))
 
         self._setup_net_client_clock(base_time)
 
