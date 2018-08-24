@@ -16,55 +16,20 @@ logger = logging.getLogger(__name__)
 class Player(object):
     Gst.init(None)
 
-    def __init__(self, platform, filename, ip, clock_port,
-                 show_gui=True,
-                 seek_grace_time=0,
-                 seek_lookahead=0,
-                 videocrop_config=VideocropConfig(0, 0, 0, 0)):
+    def __init__(self, platform, show_gui=True):
         if not issubclass(platform, PlayerPlatform):
             raise PlayerException("Invalid player platform {}, available platforms: {}".format(platform,
                                                                                                get_player_platforms()))
 
-        real_path = os.path.realpath(os.path.expanduser(filename))
-        if not os.path.isfile(real_path):
-            raise PlayerException("File '{}' does not exist!".format(filename))
-
-        try:
-            socket.inet_pton(socket.AF_INET, ip)
-        except socket.error as e:
-            raise PlayerException(e)
-
-        if not isinstance(clock_port, int):
-            raise PlayerException("Port should be an integer, current value: {}".format(clock_port))
-
-        if not isinstance(show_gui, bool):
-            raise PlayerException("GUI should be a boolean")
-
-        if not any([isinstance(seek_grace_time, t) for t in (int, long)]):
-            raise PlayerException("Seek grace time should be an integer, current value: {}".format(seek_grace_time))
-
-        if not any([isinstance(seek_lookahead, t) for t in (int, long)]):
-            raise PlayerException("Seek lookahead should be an integer, current value: {}".format(seek_lookahead))
-
-        self._player_platform = platform
-        self._filename = filename
-        self._ip = ip
-        self._port = clock_port
-        self._base_time = None
-        self._seek_grace_time = seek_grace_time
-        self._seek_lookahead = seek_lookahead
-        self._pipeline = self._get_pipeline(filename, platform, show_gui, videocrop_config)
-        self._set_pipeline_state(Gst.State.PAUSED)
-
-        self._bus = self._pipeline.get_bus()
-        self._watch_id = self._bus.connect("message", self._on_bus_msg)
-        self._bus.add_signal_watch()
+        self._platform = platform
+        self._show_gui = show_gui
+        self._pipeline = None
 
         def run_player_thread():
             GObject.MainLoop().run()
 
-        self._player_thread = threading.Thread(target=run_player_thread)
-        self._player_thread.start()
+        self._gobject_thread = threading.Thread(target=run_player_thread)
+        self._gobject_thread.start()
 
         logger.debug("Player constructed")
 
@@ -108,44 +73,36 @@ class Player(object):
         logger.info("Setting the pipeline state to %s", state)
         self._pipeline.set_state(state)
 
-    def _get_updated_seek_time(self, seek_time):
-        if not any([isinstance(seek_time, t) for t in (int, long)]):
-            raise PlayerException("Seek time should be an integer, current value: {}".format(seek_time))
-
-        if seek_time == 0:
-            return 0
-
-        while self.get_duration() == 0:
-            time.sleep(0.1)  # TODO: Can't we use an other call to wait for the pipeline?
-
-        if seek_time < 0 or seek_time > self.get_duration():
-            raise PlayerException("Invalid seek_time {}. The value should be between {} and {}",
-                                  seek_time, 0, self.get_duration())
-
-        return min(self.get_duration(), seek_time + self._seek_lookahead)
-
-    def _set_base_time(self, base_time, seek_time):
+    def _set_base_time(self, base_time):
         if not any([isinstance(base_time, t) for t in (int, long)]):
             raise PlayerException("Base time should be an integer, current value: {}".format(base_time))
 
         logger.info("Setting base time to %d", base_time)
         self._base_time = base_time
         self._pipeline.set_start_time(Gst.CLOCK_TIME_NONE)
-        self._pipeline.set_base_time(base_time + seek_time)  # TODO: Figure out why this works
+        self._pipeline.set_base_time(base_time)
 
-    def _seek(self, seek_time):
-        logger.info("Seeking to %d", seek_time)
-        self._pipeline.seek_simple(Gst.Format.TIME, Gst.SeekFlags.FLUSH | Gst.SeekFlags.ACCURATE, seek_time)
+    def play(self, filename, videocrop_config=VideocropConfig(0, 0, 0, 0)):
+        if self._pipeline:
+            self.stop()
 
-    def play(self, base_time, seek_time):
-        updated_seek_time = self._get_updated_seek_time(seek_time)
+        real_path = os.path.realpath(os.path.expanduser(filename))
+        if not os.path.isfile(real_path):
+            raise PlayerException("File '{}' does not exist!".format(filename))
 
-        self._seek(updated_seek_time)
-        self._set_base_time(base_time, updated_seek_time)
+        self._pipeline = self._get_pipeline(filename, self._platform, self._show_gui, videocrop_config)
         self._set_pipeline_state(Gst.State.PLAYING)
 
+        self._pipeline.get_bus().connect("message", self._on_bus_msg)
+        self._pipeline.get_bus().add_signal_watch()
+
+        # Wait until the video is loaded
+        # TODO: Is there an other 
+        while self.get_duration() == 0:
+            time.sleep(0.1)
+
     def stop(self):
-        self._set_pipeline_state(Gst.State.PAUSED)
+        self._set_pipeline_state(Gst.State.NULL)
 
     def is_playing(self):
         _, state, _ = self._pipeline.get_state(Gst.CLOCK_TIME_NONE)

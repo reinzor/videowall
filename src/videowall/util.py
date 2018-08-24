@@ -1,3 +1,7 @@
+import argparse
+import socket
+
+
 def to_dict(obj):
     """
     Convert object to dictionary, source:
@@ -23,3 +27,20 @@ def to_dict(obj):
         return data
     else:
         return obj
+
+
+def validate_ip_port(ip, port):
+    try:
+        socket.inet_pton(socket.AF_INET, ip)
+    except socket.error as e:
+        raise Exception(e)
+
+    if not isinstance(port, int):
+        raise Exception("Port should be an integer, current value: {}".format(port))
+
+
+def validate_positive_int_argument(value):
+    ivalue = int(value)
+    if ivalue <= 0:
+        raise argparse.ArgumentTypeError("%s is an invalid positive int value" % value)
+    return ivalue

@@ -27,12 +27,10 @@ class Client(object):
             client_cfg = self._get_client_specific_config(msg.client_config)
 
             # This can be done in the constructor in the future if we can set filesrcs dynamically
-            if self._player is None:
+            if self._player is None or self._player.get_base_time() != msg.base_time:
+                logger.info("Received an updated base time, sending new play command to player ...")
                 self._player = PlayerClient(self._player_platform, msg.filename, msg.player_ip, msg.player_port,
                                             msg.seek_grace_time, msg.seek_lookahead, client_cfg.videocrop_config)
-
-            if self._player.get_base_time() != msg.base_time:
-                logger.info("Received an updated base time, sending new play command to player ...")
                 self._player.play(
                     base_time=msg.base_time,
                     seek_time=msg.position
