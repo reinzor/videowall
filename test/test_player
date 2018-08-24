@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import collections
 import logging
 import random
 import time
@@ -7,7 +8,7 @@ from argparse import ArgumentParser
 
 from videowall.networking.message_definition import VideocropConfig
 from videowall.players import Player, get_player_platform_strings, player_platform_from_string
-from videowall.util import validate_positive_int_argument
+from videowall.util import validate_positive_int_argument, validate_positive_or_zero_int_argument
 
 
 def random_int(size):
@@ -17,28 +18,41 @@ def random_int(size):
 if __name__ == '__main__':
     parser = ArgumentParser()
     parser.add_argument('platform', choices=get_player_platform_strings())
-    parser.add_argument('filename')
+    parser.add_argument('filename', nargs='+')
     parser.add_argument('--spin_rate', type=validate_positive_int_argument, default=5)
-    parser.add_argument('--min_duration', type=validate_positive_int_argument, default=1)
-    parser.add_argument('--max_duration', type=validate_positive_int_argument, default=5)
+    parser.add_argument('--gui', action='store_true')
+
+    # Add some randomness to test the player
+    parser.add_argument('--min_duration', type=validate_positive_int_argument, default=10)
+    parser.add_argument('--max_duration', type=validate_positive_int_argument, default=10)
+    parser.add_argument('--min_videocrop_width', type=validate_positive_or_zero_int_argument, default=0)
+    parser.add_argument('--min_videocrop_height', type=validate_positive_or_zero_int_argument, default=0)
+    parser.add_argument('--max_videocrop_width', type=validate_positive_or_zero_int_argument, default=0)
+    parser.add_argument('--max_videocrop_height', type=validate_positive_or_zero_int_argument, default=0)
 
     args = parser.parse_args()
+    filenames = collections.deque(args.filename)
 
     logging.getLogger().setLevel(logging.DEBUG)
 
-    player = Player(player_platform_from_string(args.platform), args.filename)
+    player = Player(player_platform_from_string(args.platform), args.gui)
 
     while True:
-        width, height = 1280, 720
+        filename = filenames[0]
+        logging.info("Playing file %s", filename)
 
         play_duration = random.randint(args.min_duration, args.max_duration)
-        videocrop_config = VideocropConfig(random.randint(0, height / 2), random.randint(0, width / 2),
-                                           random.randint(0, width / 2), random.randint(0, height / 2))
+        videocrop_config = VideocropConfig(random.randint(args.min_videocrop_height, args.max_videocrop_height),
+                                           random.randint(args.min_videocrop_width, args.max_videocrop_width),
+                                           random.randint(args.min_videocrop_width, args.max_videocrop_width),
+                                           random.randint(args.min_videocrop_height, args.max_videocrop_height))
 
-        player.play(args.filename, videocrop_config)
+        player.play(filename, videocrop_config)
 
         logging.info("Playing for %d seconds", play_duration)
         t_start = time.time()
         while time.time() < t_start + play_duration:
             logging.info("Position: %.2f", player.get_position() / 1e9)
             time.sleep(1. / args.spin_rate)
+
+        filenames.rotate()

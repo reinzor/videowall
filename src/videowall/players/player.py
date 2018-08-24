@@ -21,6 +21,9 @@ class Player(object):
             raise PlayerException("Invalid player platform {}, available platforms: {}".format(platform,
                                                                                                get_player_platforms()))
 
+        if not isinstance(show_gui, bool):
+            raise PlayerException("show_gui should be a boolean")
+
         self._platform = platform
         self._show_gui = show_gui
         self._pipeline = None
@@ -90,12 +93,17 @@ class Player(object):
         logger.info("Setting the pipeline state to %s ... ", state)
         self._pipeline.set_state(state)
 
+        if state == Gst.State.PLAYING:
+            while self.get_duration() == 0:
+                time.sleep(0.1)
+
     def play(self, filename, videocrop_config=VideocropConfig(0, 0, 0, 0)):
         self._construct_pipeline(filename, videocrop_config)
         self._set_pipeline_state(Gst.State.PLAYING)
 
     def stop(self):
         self._set_pipeline_state(Gst.State.NULL)
+        del self._pipeline
 
     def is_playing(self):
         return self._get_pipeline_state() == Gst.State.PLAYING
