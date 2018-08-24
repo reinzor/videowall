@@ -33,13 +33,19 @@ class Player(object):
 
         logger.debug("Player constructed")
 
-    @staticmethod
-    def _get_pipeline(filename, player_platform, gui, videocrop_config):
+    def _construct_pipeline(self, filename, videocrop_config):
+        if self._pipeline:
+            self.stop()
+
+        real_path = os.path.realpath(os.path.expanduser(filename))
+        if not os.path.isfile(real_path):
+            raise PlayerException("File '{}' does not exist!".format(filename))
+
         launch_cmd = "filesrc location={}".format(filename)
 
-        if player_platform == PlayerPlatformX86:
+        if self._platform == PlayerPlatformX86:
             launch_cmd += " ! decodebin"
-        elif player_platform == PlayerPlatformRaspberryPi:
+        elif self._platform == PlayerPlatformRaspberryPi:
             launch_cmd += " ! qtdemux ! h264parse ! omxh264dec"
 
         gui = True  # TODO: Remove, first get GTK to work properly
@@ -57,48 +63,20 @@ class Player(object):
 
         logger.debug("Creating pipeline from launch command %s ..", launch_cmd)
 
-        pipeline = Gst.parse_launch(launch_cmd)
-        return pipeline
+        self._pipeline = Gst.parse_launch(launch_cmd)
 
-    def _eos_callback(self, bus, msg):
-        pass
+        self._pipeline.get_bus().connect("message", self._on_bus_msg)
+        self._pipeline.get_bus().add_signal_watch()
+        self._set_pipeline_state(Gst.State.READY)
 
     def _on_bus_msg(self, bus, msg):
         if msg is not None:
             if msg.type is Gst.MessageType.EOS:
-                logger.info("Gst.MessageType.EOS")
-                self._eos_callback(bus, msg)
+                self.stop()
 
-    def _set_pipeline_state(self, state):
-        logger.info("Setting the pipeline state to %s", state)
-        self._pipeline.set_state(state)
-
-    def play(self, filename, videocrop_config=VideocropConfig(0, 0, 0, 0)):
-        if self._pipeline:
-            self.stop()
-
-        real_path = os.path.realpath(os.path.expanduser(filename))
-        if not os.path.isfile(real_path):
-            raise PlayerException("File '{}' does not exist!".format(filename))
-
-        self._pipeline = self._get_pipeline(filename, self._platform, self._show_gui, videocrop_config)
-        self._set_pipeline_state(Gst.State.PLAYING)
-
-        self._pipeline.get_bus().connect("message", self._on_bus_msg)
-        self._pipeline.get_bus().add_signal_watch()
-
-        # Wait until the video is loaded
-        # TODO: Is there an other way to check whether the pipeline is ready?
-        while self.get_duration() == 0:
-            time.sleep(0.1)
-
-    def stop(self):
-        self._set_pipeline_state(Gst.State.NULL)
-
-    def is_playing(self):
+    def _get_pipeline_state(self):
         _, state, _ = self._pipeline.get_state(Gst.CLOCK_TIME_NONE)
-        logger.debug("Player state %s", state)
-        return state == Gst.State.PLAYING
+        return state
 
     def get_position(self):
         _, position = self._pipeline.query_position(Gst.Format.TIME)
@@ -107,3 +85,17 @@ class Player(object):
     def get_duration(self):
         _, duration = self._pipeline.query_duration(Gst.Format.TIME)
         return duration
+
+    def _set_pipeline_state(self, state):
+        logger.info("Setting the pipeline state to %s ... ", state)
+        self._pipeline.set_state(state)
+
+    def play(self, filename, videocrop_config=VideocropConfig(0, 0, 0, 0)):
+        self._construct_pipeline(filename, videocrop_config)
+        self._set_pipeline_state(Gst.State.PLAYING)
+
+    def stop(self):
+        self._set_pipeline_state(Gst.State.NULL)
+
+    def is_playing(self):
+        return self._get_pipeline_state() == Gst.State.PLAYING
