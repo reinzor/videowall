@@ -28,11 +28,11 @@ class Player(object):
         self._show_gui = show_gui
         self._pipeline = None
 
-        def run_player_thread():
-            GObject.MainLoop().run()
-
-        self._gobject_thread = threading.Thread(target=run_player_thread)
-        self._gobject_thread.start()
+        # def run_player_thread():
+        #     GObject.MainLoop().run()
+        #
+        # self._gobject_thread = threading.Thread(target=run_player_thread)
+        # self._gobject_thread.start()
 
         logger.debug("Player constructed")
 
