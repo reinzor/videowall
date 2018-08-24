@@ -73,15 +73,6 @@ class Player(object):
         logger.info("Setting the pipeline state to %s", state)
         self._pipeline.set_state(state)
 
-    def _set_base_time(self, base_time):
-        if not any([isinstance(base_time, t) for t in (int, long)]):
-            raise PlayerException("Base time should be an integer, current value: {}".format(base_time))
-
-        logger.info("Setting base time to %d", base_time)
-        self._base_time = base_time
-        self._pipeline.set_start_time(Gst.CLOCK_TIME_NONE)
-        self._pipeline.set_base_time(base_time)
-
     def play(self, filename, videocrop_config=VideocropConfig(0, 0, 0, 0)):
         if self._pipeline:
             self.stop()
