@@ -88,7 +88,7 @@ class Player(object):
         self._pipeline.get_bus().add_signal_watch()
 
         # Wait until the video is loaded
-        # TODO: Is there an other 
+        # TODO: Is there an other way to check whether the pipeline is ready?
         while self.get_duration() == 0:
             time.sleep(0.1)
 
@@ -99,18 +99,6 @@ class Player(object):
         _, state, _ = self._pipeline.get_state(Gst.CLOCK_TIME_NONE)
         logger.debug("Player state %s", state)
         return state == Gst.State.PLAYING
-
-    def get_filename(self):
-        return self._filename
-
-    def get_ip(self):
-        return self._ip
-
-    def get_port(self):
-        return self._port
-
-    def get_base_time(self):
-        return self._base_time
 
     def get_position(self):
         _, position = self._pipeline.query_position(Gst.Format.TIME)
