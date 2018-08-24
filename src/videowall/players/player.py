@@ -67,15 +67,15 @@ class Player(object):
         logger.debug("Creating pipeline from launch command %s ..", launch_cmd)
 
         self._pipeline = Gst.parse_launch(launch_cmd)
-
-        self._pipeline.get_bus().connect("message", self._on_bus_msg)
-        self._pipeline.get_bus().add_signal_watch()
-        self._set_pipeline_state(Gst.State.READY)
-
-    def _on_bus_msg(self, bus, msg):
-        if msg is not None:
-            if msg.type is Gst.MessageType.EOS:
-                self.stop()
+    #
+    #     self._pipeline.get_bus().connect("message", self._on_bus_msg)
+    #     self._pipeline.get_bus().add_signal_watch()
+    #     self._set_pipeline_state(Gst.State.READY)
+    #
+    # def _on_bus_msg(self, bus, msg):
+    #     if msg is not None:
+    #         if msg.type is Gst.MessageType.EOS:
+    #             self.stop()
 
     def _get_pipeline_state(self):
         _, state, _ = self._pipeline.get_state(Gst.CLOCK_TIME_NONE)
