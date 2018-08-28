@@ -4,7 +4,7 @@ import sys
 import threading
 import time
 
-from videowall.gi_version import GLib, Gst, GObject
+from videowall.gi_version import GLib, Gst, GObject, Gdk, Gtk
 from videowall.networking.message_definition import VideocropConfig
 
 from .player_exceptions import PlayerException
@@ -25,6 +25,10 @@ class Player(object):
         if not isinstance(show_gui, bool):
             raise PlayerException("show_gui should be a boolean")
 
+        screen = Gdk.Screen.get_default()
+        self._screen_width = screen.get_width()
+        self._screen_height = screen.get_height()
+
         self._platform = platform
         self._show_gui = show_gui
         self._pipeline = None
@@ -37,13 +41,21 @@ class Player(object):
 
         GLib.timeout_add(self._g_timer_callback_interval, self._g_timer_callback)
 
+        # Set-up window
+        self._window = Gtk.Window(Gtk.WindowType.TOPLEVEL)
+        self._window.set_title("Player")
+        self._window.set_default_size(self._screen_width, self._screen_height)
+        self._movie_view = Gtk.DrawingArea()
+        self._window.add(self._movie_view)
+        self._window.show_all()
+
         def run_player_thread():
-            GObject.MainLoop().run()
+            Gtk.main()
 
         self._gobject_thread = threading.Thread(target=run_player_thread)
         self._gobject_thread.start()
 
-        logger.debug("Player constructed")
+        logger.info("Player constructed for window (%dx%d)", self._screen_width, self._screen_height)
 
     def _g_timer_callback(self):
         if self._pipeline and self._state == Gst.State.PLAYING:
@@ -84,6 +96,10 @@ class Player(object):
 
         self._pipeline = Gst.parse_launch(launch_cmd)
 
+        sink = self._pipeline.get_child_by_index(0)
+        sink.set_property("force-aspect-ratio", True)
+        sink.set_window_handle(self._movie_view.get_property('window').get_xid())
+
         self._pipeline.get_bus().connect("message", self._g_on_bus_msg)
         self._pipeline.get_bus().add_signal_watch()
         self._g_set_pipeline_state(Gst.State.PLAYING)
@@ -122,9 +138,13 @@ class Player(object):
             time.sleep(self._wait_for_state_interval)
 
     def get_position(self):
+        if not self._pipeline or self._state != Gst.State.PLAYING:
+            raise PlayerException('Cannot get position, player is not playing')
         return self._position
 
     def get_duration(self):
+        if not self._pipeline or self._state != Gst.State.PLAYING:
+            raise PlayerException('Cannot get duration, player is not playing')
         return self._duration
 
     def play(self, filename, videocrop_config=VideocropConfig(0, 0, 0, 0)):
