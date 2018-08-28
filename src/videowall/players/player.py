@@ -32,6 +32,7 @@ class Player(object):
         self._position = 0
         self._duration = 0
         self._g_timer_callback_interval = 100
+        self._pipeline_modification_poll_interval = 0.1
 
         GLib.timeout_add(self._g_timer_callback_interval, self._g_timer_callback)
 
@@ -97,8 +98,8 @@ class Player(object):
             if msg.type is Gst.MessageType.STATE_CHANGED:
                 _, newstate, _ = msg.parse_state_changed()
                 if self._state != newstate:
-                    logger.debug("Pipeline state changed to %s ... ", self._state)
                     self._state = newstate
+                    logger.debug("Pipeline state changed to %s ... ", self._state)
             if msg.type is Gst.MessageType.EOS:
                 self._g_destroy_pipeline()
 
@@ -116,16 +117,16 @@ class Player(object):
         self.stop()
 
         GLib.idle_add(self._g_construct_pipeline, filename, videocrop_config)
-        while not self._pipeline and self._state == Gst.State.PLAYING:
-            time.sleep(0.1)
+
+        time.sleep(self._pipeline_modification_poll_interval)
+        while not self._pipeline or self._state != Gst.State.PLAYING:
             logger.warn("Waiting for the pipeline to play ...")
+            time.sleep(self._pipeline_modification_poll_interval)
 
     def stop(self):
         GLib.idle_add(self._g_destroy_pipeline)
 
+        time.sleep(self._pipeline_modification_poll_interval)
         while self._pipeline:
-            time.sleep(0.1)
             logger.warn("Waiting for the pipeline to stop ...")
-
-    def is_playing(self):
-        return self._pipeline and self._state == Gst.State.PLAYING
+            time.sleep(self._pipeline_modification_poll_interval)
