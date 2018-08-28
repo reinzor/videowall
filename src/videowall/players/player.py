@@ -17,7 +17,7 @@ class Player(object):
     Gst.init(None)
     GObject.threads_init()
 
-    def __init__(self, platform, show_gui=True):
+    def __init__(self, platform, show_gui=True, name="Player"):
         if not issubclass(platform, PlayerPlatform):
             raise PlayerException("Invalid player platform {}, available platforms: {}".format(platform,
                                                                                                get_player_platforms()))
@@ -31,10 +31,11 @@ class Player(object):
 
         self._platform = platform
         self._show_gui = show_gui
-        self._pipeline = None
+        self._g_pipeline = None
         self._state = Gst.State.NULL
         self._position = 0
         self._duration = 0
+        self._filename = None
         self._g_timer_callback_interval = 100
         self._wait_for_state_interval = 0.1
         self._wait_for_state_max_duration = 5
@@ -43,7 +44,7 @@ class Player(object):
 
         # Set-up window
         self._window = Gtk.Window(Gtk.WindowType.TOPLEVEL)
-        self._window.set_title("Player")
+        self._window.set_title(name)
         self._window.set_default_size(self._screen_width, self._screen_height)
         self._movie_view = Gtk.DrawingArea()
         self._window.add(self._movie_view)
@@ -58,9 +59,9 @@ class Player(object):
         logger.info("Player constructed for window (%dx%d)", self._screen_width, self._screen_height)
 
     def _g_timer_callback(self):
-        if self._pipeline and self._state == Gst.State.PLAYING:
-            _, self._duration = self._pipeline.query_duration(Gst.Format.TIME)
-            _, self._position = self._pipeline.query_position(Gst.Format.TIME)
+        if self._g_pipeline and self._state == Gst.State.PLAYING:
+            _, self._duration = self._g_pipeline.query_duration(Gst.Format.TIME)
+            _, self._position = self._g_pipeline.query_position(Gst.Format.TIME)
         else:
             self._duration = 0
             self._position = 0
@@ -94,19 +95,20 @@ class Player(object):
 
         logger.debug("Creating pipeline from launch command %s ..", launch_cmd)
 
-        self._pipeline = Gst.parse_launch(launch_cmd)
+        self._g_pipeline = Gst.parse_launch(launch_cmd)
+        self._filename = filename
 
-        sink = self._pipeline.get_child_by_index(0)
+        sink = self._g_pipeline.get_child_by_index(0)
         sink.set_window_handle(self._movie_view.get_property('window').get_xid())
 
-        self._pipeline.get_bus().connect("message", self._g_on_bus_msg)
-        self._pipeline.get_bus().add_signal_watch()
+        self._g_pipeline.get_bus().connect("message", self._g_on_bus_msg)
+        self._g_pipeline.get_bus().add_signal_watch()
         self._g_set_pipeline_state(Gst.State.PLAYING)
 
     def _g_destroy_pipeline(self):
-        if self._pipeline is not None:
+        if self._g_pipeline is not None:
             self._g_set_pipeline_state(Gst.State.NULL)
-            self._pipeline = None
+            self._g_pipeline = None
             self._state = Gst.State.NULL
 
     def _g_on_bus_msg(self, bus, msg):
@@ -121,7 +123,7 @@ class Player(object):
 
     def _g_set_pipeline_state(self, state):
         logger.info("Setting the pipeline state to %s ... ", state)
-        self._pipeline.set_state(state)
+        self._g_pipeline.set_state(state)
 
     def _wait_for_state(self, state):
         t_start = time.time()
@@ -142,6 +144,11 @@ class Player(object):
     def get_duration(self):
         return self._duration
 
+    def get_filename(self):
+        if self._filename is None:
+            raise PlayerException("No filename available, please first play a file")
+        return self._filename
+
     def play(self, filename, videocrop_config=VideocropConfig(0, 0, 0, 0)):
         self.stop()
 
@@ -151,3 +158,6 @@ class Player(object):
     def stop(self):
         GLib.idle_add(self._g_destroy_pipeline)
         self._wait_for_state(Gst.State.NULL)
+
+    def is_playing(self):
+        return self._state == Gst.State.PLAYING

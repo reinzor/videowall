@@ -1,23 +1,25 @@
 #!/usr/bin/env python
+import collections
 import json
 import logging
+import time
 from argparse import ArgumentParser
 
 from videowall.players import get_player_platform_strings, player_platform_from_string
 from videowall.server import Server
+from videowall.util import validate_positive_int_argument
 
 if __name__ == '__main__':
     parser = ArgumentParser()
-    parser.add_argument('player_platform', choices=get_player_platform_strings())
-    parser.add_argument('filename')
-    parser.add_argument('--player_ip', default='127.0.0.1')
-    parser.add_argument('--player_port', type=int, default=11111)
+    parser.add_argument('platform', choices=get_player_platform_strings())
+    parser.add_argument('filename', nargs='+')
+    parser.add_argument('--spin_rate', type=validate_positive_int_argument, default=5)
     parser.add_argument('--gui', action='store_true')
+    parser.add_argument('--ip', default='127.0.0.1')
+    parser.add_argument('--broadcast_port', default=2000)
+    parser.add_argument('--clock_port', default=2222)
+
     parser.add_argument('--verbose', action='store_true')
-    parser.add_argument('--broadcast_port', type=int, default=2000)
-    parser.add_argument('--broadcast_interval', type=float, default=1.0)
-    parser.add_argument('--client_seek_lookahead', type=int, default=5000000000)
-    parser.add_argument('--client_seek_grace_time', type=int, default=500000000)
     parser.add_argument('--client_config', type=json.loads, default='{}')
 
     args = parser.parse_args()
@@ -25,6 +27,18 @@ if __name__ == '__main__':
     if args.verbose:
         logging.getLogger().setLevel(logging.DEBUG)
 
-    Server(args.broadcast_port, args.broadcast_interval, player_platform_from_string(args.player_platform),
-           args.filename, args.player_ip, args.player_port, args.gui, args.client_seek_lookahead,
-           args.client_seek_grace_time, args.client_config).run()
+    filenames = collections.deque(args.filename)
+
+    server = Server(player_platform_from_string(args.platform), args.ip, args.broadcast_port, args.clock_port, args.gui,
+                    args.client_config)
+
+    while True:
+        filename = filenames[0]
+        logging.info("Playing file %s", filename)
+
+        server.play(filename)
+
+        while server.is_playing():
+            time.sleep(1. / args.spin_rate)
+
+        filenames.rotate()

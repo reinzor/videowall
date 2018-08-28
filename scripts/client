@@ -18,4 +18,4 @@ if __name__ == '__main__':
     if args.verbose:
         logging.getLogger().setLevel(logging.DEBUG)
 
-    Client(args.broadcast_port, player_platform_from_string(args.player_platform), args.ip).run()
+    Client(args.ip, player_platform_from_string(args.player_platform), args.broadcast_port).run()

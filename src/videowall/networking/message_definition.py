@@ -37,17 +37,12 @@ class ClientConfig(Message):
 
 
 class BroadcastMessage(Message):
-    def __init__(self, filename, base_time, position, seek_grace_time, seek_lookahead, duration, player_ip,
-                 player_port, client_config):
+    def __init__(self, filename, base_time, ip, clock_port, client_config):
         try:
             self.filename = filename
             self.base_time = int(base_time)
-            self.position = int(position)
-            self.seek_grace_time = int(seek_grace_time)
-            self.seek_lookahead = int(seek_lookahead)
-            self.duration = int(duration)
-            self.player_ip = player_ip
-            self.player_port = int(player_port)
+            self.ip = ip
+            self.clock_port = int(clock_port)
 
             if not isinstance(client_config, dict):
                 raise NetworkingException("The client config should be a dictionary")

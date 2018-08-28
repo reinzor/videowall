@@ -7,6 +7,7 @@ from videowall.networking import NetworkingClient
 if __name__ == '__main__':
     parser = ArgumentParser()
 
+    parser.add_argument('--ip', default='127.0.0.1')
     parser.add_argument('--broadcast_port', type=int, default=2000)
     parser.add_argument('--buffer_size', type=int, default=1024)
 
@@ -14,6 +15,6 @@ if __name__ == '__main__':
 
     logging.getLogger().setLevel(logging.DEBUG)
 
-    client = NetworkingClient(args.broadcast_port, args.buffer_size)
+    client = NetworkingClient(args.ip, args.broadcast_port, args.buffer_size)
     while True:
         client.receive_broadcast()
