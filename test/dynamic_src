@@ -1,23 +1,27 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 
 '''
 Simple example to demonstrate dynamically adding and removing source elements
 to a playing pipeline.
 '''
 
-import sys
-import random
-
 import gi
+import random
+import sys
+import time
+from collections import deque
+
 gi.require_version('Gst', '1.0')
 gi.require_version('GLib', '2.0')
 gi.require_version('GObject', '2.0')
 from gi.repository import GLib, GObject, Gst
 
+
 class ProbeData:
     def __init__(self, pipe, src):
         self.pipe = pipe
         self.src = src
+
 
 def bus_call(bus, message, loop):
     t = message.type
@@ -30,61 +34,225 @@ def bus_call(bus, message, loop):
         loop.quit()
     return True
 
+
 def dispose_src_cb(src):
     src.set_state(Gst.State.NULL)
 
+
 def probe_cb(pad, info, pdata):
+    return Gst.PadProbeReturn.REMOVE
+    print "probe_cb"
     peer = pad.get_peer()
     pad.unlink(peer)
     pdata.pipe.remove(pdata.src)
     # Can't set the state of the src to NULL from its streaming thread
     GLib.idle_add(dispose_src_cb, pdata.src)
 
-    pdata.src = Gst.ElementFactory.make('videotestsrc')
-    pdata.src.props.pattern = random.randint(0, 24)
+    pdata.src = Gst.ElementFactory.make('filesrc')
+    pdata.src.props.location = '/home/rein/samples/big_buck_bunny_720p_30mb.mp4'
     pdata.pipe.add(pdata.src)
-    srcpad = pdata.src.get_static_pad ("src")
+    srcpad = pdata.src.get_static_pad("src")
     srcpad.link(peer)
     pdata.src.sync_state_with_parent()
 
-    GLib.timeout_add_seconds(1, timeout_cb, pdata)
+    GLib.timeout_add_seconds(10, timeout_cb, pdata)
 
     return Gst.PadProbeReturn.REMOVE
 
+
+filenames = deque(['/home/rein/samples/fantastic.mp4',  '/home/rein/samples/big_buck_bunny_720p_30mb.mp4'])
+
+
 def timeout_cb(pdata):
-    srcpad = pdata.src.get_static_pad('src')
-    srcpad.add_probe(Gst.PadProbeType.IDLE, probe_cb, pdata)
+    print "timeout cb"
+    pdata.pipe.set_state(Gst.State.READY)
+    # time.sleep(2)
+    # print pdata.pipe.get_state(Gst.CLOCK_TIME_NONE)
+    filenames.rotate()
+    pdata.src.props.location = filenames[0]
+    pdata.pipe.set_state(Gst.State.PLAYING)
+    # time.sleep(2)
+    # print pdata.pipe.get_state(Gst.CLOCK_TIME_NONE)
+    # # srcpad = pdata.src.get_static_pad('src')
+    # # srcpad.add_probe(Gst.PadProbeType.IDLE, probe_cb, pdata)
+    GLib.timeout_add_seconds(5, timeout_cb, pdata)
+
     return GLib.SOURCE_REMOVE
 
+
+decoder = None
+def demuxer_cb(demuxer, pad):
+    if pad.name == 'video_0':
+        sink = decoder.get_static_pad('sink')
+        print "Linking pad {} of element {} with pad {} of element {}".format(pad.name,
+                                                                              demuxer.name,
+                                                                              sink.name,
+                                                                              decoder.name)
+        pad.link(sink)
+
+
 def main(args):
+    global decoder
+
     GObject.threads_init()
     Gst.init(None)
 
     pipe = Gst.Pipeline.new('dynamic')
-    src = Gst.ElementFactory.make('videotestsrc')
-    sink = Gst.ElementFactory.make('autovideosink')
-    pipe.add(src, sink)
-    src.link(sink)
+
+    #gst-launch-1.0 filesrc location=/home/rein/samples/fantastic.mp4 ! qtdemux ! h264parse ! avdec_h264 ! videoconvert ! ximagesink
+    src = Gst.ElementFactory.make('filesrc')
+    src.set_property("location", filenames[0])
+    demux = Gst.ElementFactory.make('qtdemux', 'demux')
+    demux.connect('pad-added', demuxer_cb)
+    # h264parse = Gst.ElementFactory.make('h264parse')
+    decoder = Gst.ElementFactory.make('avdec_h264', 'decoder')
+    videoconvert = Gst.ElementFactory.make('videoconvert')
+    queue = Gst.ElementFactory.make('queue')
+    sink = Gst.ElementFactory.make('ximagesink')
+
+    # import ipdb; ipdb.set_trace()
+
+    pipe.add(src, demux, decoder, videoconvert, queue, sink)
+
+    src.link(demux)
+    # qtdemux.link(avdec_h264)
+    # h264parse.link(avdec_h264)
+    decoder.link(videoconvert)
+    videoconvert.link(queue)
+    queue.link(sink)
 
     pdata = ProbeData(pipe, src)
 
     loop = GObject.MainLoop()
 
-    GLib.timeout_add_seconds(1, timeout_cb, pdata)
+    GLib.timeout_add_seconds(10, timeout_cb, pdata)
 
     bus = pipe.get_bus()
     bus.add_signal_watch()
-    bus.connect ("message", bus_call, loop)
-    
+    bus.connect("message", bus_call, loop)
+
     # start play back and listen to events
     pipe.set_state(Gst.State.PLAYING)
     try:
-      loop.run()
+        loop.run()
     except:
-      pass
-    
+        pass
+
     # cleanup
     pipe.set_state(Gst.State.NULL)
 
+
 if __name__ == '__main__':
     sys.exit(main(sys.argv))
+
+#
+# '''
+# Simple example to demonstrate dynamically adding and removing source elements
+# to a playing pipeline.
+# '''
+#
+# import gi
+# import random
+# import sys
+#
+# gi.require_version('Gst', '1.0')
+# gi.require_version('GLib', '2.0')
+# gi.require_version('GObject', '2.0')
+# from gi.repository import GLib, GObject, Gst
+#
+#
+# class ProbeData:
+#     def __init__(self, pipe, src):
+#         self.pipe = pipe
+#         self.src = src
+#
+#
+# def bus_call(bus, message, loop):
+#     t = message.type
+#     if t == Gst.MessageType.EOS:
+#         sys.stdout.write("End-of-stream\n")
+#         loop.quit()
+#     elif t == Gst.MessageType.ERROR:
+#         err, debug = message.parse_error()
+#         sys.stderr.write("Error: %s: %s\n" % (err, debug))
+#         loop.quit()
+#     return True
+#
+#
+# def dispose_src_cb(src):
+#     src.set_state(Gst.State.NULL)
+#
+#
+# def probe_cb(pad, info, pdata):
+#     peer = pad.get_peer()
+#     pad.unlink(peer)
+#     pdata.pipe.remove(pdata.src)
+#     # Can't set the state of the src to NULL from its streaming thread
+#     GLib.idle_add(dispose_src_cb, pdata.src)
+#
+#     pdata.src = Gst.ElementFactory.make('videotestsrc')
+#     pdata.src.props.pattern = random.randint(0, 24)
+#     pdata.pipe.add(pdata.src)
+#     srcpad = pdata.src.get_static_pad("src")
+#     srcpad.link(peer)
+#     pdata.src.sync_state_with_parent()
+#
+#     GLib.timeout_add_seconds(1, timeout_cb, pdata)
+#
+#     return Gst.PadProbeReturn.REMOVE
+#
+#
+# def timeout_cb(pdata):
+#     srcpad = pdata.src.get_static_pad('src')
+#     srcpad.add_probe(Gst.PadProbeType.IDLE, probe_cb, pdata)
+#     return GLib.SOURCE_REMOVE
+#
+#
+# def main(args):
+#     GObject.threads_init()
+#     Gst.init(None)
+#
+#     pipe = Gst.Pipeline.new('dynamic')
+#
+#     #gst-launch-1.0 filesrc location=/home/rein/samples/fantastic.mp4 ! qtdemux ! h264parse ! avdec_h264 ! videoconvert ! ximagesink
+#     src = Gst.ElementFactory.make('filesrc')
+#     src.set_property("location", '/home/rein/samples/fantastic.mp4')
+#     qtdemux = Gst.ElementFactory.make('qtdemux')
+#     h264parse = Gst.ElementFactory.make('h264parse')
+#     avdec_h264 = Gst.ElementFactory.make('avdec_h264')
+#     videoconvert = Gst.ElementFactory.make('videoconvert')
+#     queue = Gst.ElementFactory.make('queue')
+#     sink = Gst.ElementFactory.make('ximagesink')
+#
+#     pipe.add(src, qtdemux, h264parse, avdec_h264, videoconvert, queue, sink)
+#
+#     src.link(qtdemux)
+#     qtdemux.link(h264parse)
+#     h264parse.link(avdec_h264)
+#     avdec_h264.link(videoconvert)
+#     videoconvert.link(queue)
+#     queue.link(sink)
+#
+#     # pdata = ProbeData(pipe, src)
+#
+#     loop = GObject.MainLoop()
+#
+#     # GLib.timeout_add_seconds(1, timeout_cb, pdata)
+#
+#     bus = pipe.get_bus()
+#     bus.add_signal_watch()
+#     bus.connect("message", bus_call, loop)
+#
+#     # start play back and listen to events
+#     pipe.set_state(Gst.State.PLAYING)
+#     try:
+#         loop.run()
+#     except:
+#         pass
+#
+#     # cleanup
+#     pipe.set_state(Gst.State.NULL)
+#
+#
+# if __name__ == '__main__':
+#     sys.exit(main(sys.argv))
