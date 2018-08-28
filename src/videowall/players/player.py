@@ -94,10 +94,16 @@ class Player(object):
         logger.info("Setting the pipeline state to %s ... ", state)
         GLib.idle_add(self._pipeline.set_state, state)
 
-        time.sleep(1)
-        # if state == Gst.State.PLAYING:
-        #     while self.get_duration() == 0:
-        #         time.sleep(0.1)
+        time.sleep(0.1)
+
+        while self._get_pipeline_state() != state:
+            logger.warn("Waiting for the pipeline to transition to state %s", state)
+            time.sleep(0.1)
+
+        if state == Gst.State.PLAYING:
+            while self.get_position() == 0:
+                logger.warn("Waiting for the pipeline to start playing ..")
+                time.sleep(0.1)
 
     def play(self, filename, videocrop_config=VideocropConfig(0, 0, 0, 0)):
         self._construct_pipeline(filename, videocrop_config)
