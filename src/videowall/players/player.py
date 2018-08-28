@@ -137,13 +137,9 @@ class Player(object):
             time.sleep(self._wait_for_state_interval)
 
     def get_position(self):
-        if not self._pipeline or self._state != Gst.State.PLAYING:
-            raise PlayerException('Cannot get position, player is not playing')
         return self._position
 
     def get_duration(self):
-        if not self._pipeline or self._state != Gst.State.PLAYING:
-            raise PlayerException('Cannot get duration, player is not playing')
         return self._duration
 
     def play(self, filename, videocrop_config=VideocropConfig(0, 0, 0, 0)):
