@@ -26,4 +26,4 @@ class PlayerServer(Player):
         )
 
     def _eos_callback(self, bus, msg):
-        self._set_pipeline_state(Gst.State.PAUSED)
+        self._g_set_pipeline_state(Gst.State.PAUSED)

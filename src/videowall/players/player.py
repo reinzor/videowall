@@ -28,6 +28,12 @@ class Player(object):
         self._platform = platform
         self._show_gui = show_gui
         self._pipeline = None
+        self._state = Gst.State.NULL
+        self._position = 0
+        self._duration = 0
+        self._g_timer_callback_interval = 100
+
+        GLib.timeout_add(self._g_timer_callback_interval, self._g_timer_callback)
 
         def run_player_thread():
             GObject.MainLoop().run()
@@ -37,10 +43,17 @@ class Player(object):
 
         logger.debug("Player constructed")
 
-    def _construct_pipeline(self, filename, videocrop_config):
-        if self._pipeline:
-            self.stop()
+    def _g_timer_callback(self):
+        if self._pipeline and self._state == Gst.State.PLAYING:
+            _, self._duration = self._pipeline.query_duration(Gst.Format.TIME)
+            _, self._position = self._pipeline.query_position(Gst.Format.TIME)
+        else:
+            self._duration = 0
+            self._position = 0
 
+        GLib.timeout_add(self._g_timer_callback_interval, self._g_timer_callback)
+
+    def _g_construct_pipeline(self, filename, videocrop_config):
         real_path = os.path.realpath(os.path.expanduser(filename))
         if not os.path.isfile(real_path):
             raise PlayerException("File '{}' does not exist!".format(filename))
@@ -68,49 +81,51 @@ class Player(object):
         logger.debug("Creating pipeline from launch command %s ..", launch_cmd)
 
         self._pipeline = Gst.parse_launch(launch_cmd)
-    #
-    #     self._pipeline.get_bus().connect("message", self._on_bus_msg)
-    #     self._pipeline.get_bus().add_signal_watch()
-    #     self._set_pipeline_state(Gst.State.READY)
-    #
-    # def _on_bus_msg(self, bus, msg):
-    #     if msg is not None:
-    #         if msg.type is Gst.MessageType.EOS:
-    #             self.stop()
 
-    def _get_pipeline_state(self):
-        _, state, _ = self._pipeline.get_state(Gst.CLOCK_TIME_NONE)
-        return state
+        self._pipeline.get_bus().connect("message", self._g_on_bus_msg)
+        self._pipeline.get_bus().add_signal_watch()
+        self._g_set_pipeline_state(Gst.State.PLAYING)
+
+    def _g_destroy_pipeline(self):
+        if self._pipeline is not None:
+            self._g_set_pipeline_state(Gst.State.NULL)
+            self._pipeline = None
+            self._state = Gst.State.NULL
+
+    def _g_on_bus_msg(self, bus, msg):
+        if msg is not None:
+            if msg.type is Gst.MessageType.STATE_CHANGED:
+                newstate = msg.parse_state_changed().newstate
+                if self._state != newstate:
+                    logger.debug("Pipeline state changed to %s ... ", self._state)
+                    self._state = newstate
+            if msg.type is Gst.MessageType.EOS:
+                self._g_destroy_pipeline()
+
+    def _g_set_pipeline_state(self, state):
+        logger.info("Setting the pipeline state to %s ... ", state)
+        self._pipeline.set_state(state)
 
     def get_position(self):
-        _, position = self._pipeline.query_position(Gst.Format.TIME)
-        return position
+        return self._position
 
     def get_duration(self):
-        _, duration = self._pipeline.query_duration(Gst.Format.TIME)
-        return duration
-
-    def _set_pipeline_state(self, state):
-        logger.info("Setting the pipeline state to %s ... ", state)
-        GLib.idle_add(self._pipeline.set_state, state)
-
-        time.sleep(0.1)
-
-        while self._get_pipeline_state() != state:
-            logger.warn("Waiting for the pipeline to transition to state %s", state)
-            time.sleep(0.1)
-
-        if state == Gst.State.PLAYING:
-            while self.get_position() == 0:
-                logger.warn("Waiting for the pipeline to start playing ..")
-                time.sleep(0.1)
+        return self._duration
 
     def play(self, filename, videocrop_config=VideocropConfig(0, 0, 0, 0)):
-        self._construct_pipeline(filename, videocrop_config)
-        self._set_pipeline_state(Gst.State.PLAYING)
+        self.stop()
+
+        GLib.idle_add(self._g_construct_pipeline, filename, videocrop_config)
+        while not self._pipeline and self._state == Gst.State.PLAYING:
+            time.sleep(0.1)
+            logger.warn("Waiting for the pipeline to play ...")
 
     def stop(self):
-        self._set_pipeline_state(Gst.State.NULL)
+        GLib.idle_add(self._g_destroy_pipeline)
+
+        while self._pipeline:
+            time.sleep(0.1)
+            logger.warn("Waiting for the pipeline to stop ...")
 
     def is_playing(self):
-        return self._get_pipeline_state() == Gst.State.PLAYING
+        return self._pipeline and self._state == Gst.State.PLAYING
