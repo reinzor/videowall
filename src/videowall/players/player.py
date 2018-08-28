@@ -1,6 +1,6 @@
 import logging
 import os.path
-import socket
+import sys
 import threading
 import time
 
@@ -32,7 +32,8 @@ class Player(object):
         self._position = 0
         self._duration = 0
         self._g_timer_callback_interval = 100
-        self._pipeline_modification_poll_interval = 0.1
+        self._wait_for_state_interval = 0.1
+        self._wait_for_state_max_duration = 0
 
         GLib.timeout_add(self._g_timer_callback_interval, self._g_timer_callback)
 
@@ -107,6 +108,19 @@ class Player(object):
         logger.info("Setting the pipeline state to %s ... ", state)
         self._pipeline.set_state(state)
 
+    def _wait_for_state(self, state):
+        t_start = time.time()
+
+        time.sleep(self._wait_for_state_interval)
+        while self._state != state:
+            dt = time.time() - t_start
+            if dt > self._wait_for_state_max_duration:
+                logger.fatal("Transition to state %s took too long: Timeout of %.2f seconds exceeded!", state,
+                             self._wait_for_state_max_duration)
+                sys.exit(1)
+            logger.warn("[%.2f/%.2f] Waiting for state transition to %s", dt, self._wait_for_state_max_duration, state)
+            time.sleep(self._wait_for_state_interval)
+
     def get_position(self):
         return self._position
 
@@ -117,16 +131,8 @@ class Player(object):
         self.stop()
 
         GLib.idle_add(self._g_construct_pipeline, filename, videocrop_config)
-
-        time.sleep(self._pipeline_modification_poll_interval)
-        while not self._pipeline or self._state != Gst.State.PLAYING:
-            logger.warn("Waiting for the pipeline to play ...")
-            time.sleep(self._pipeline_modification_poll_interval)
+        self._wait_for_state(Gst.State.PLAYING)
 
     def stop(self):
         GLib.idle_add(self._g_destroy_pipeline)
-
-        time.sleep(self._pipeline_modification_poll_interval)
-        while self._pipeline:
-            logger.warn("Waiting for the pipeline to stop ...")
-            time.sleep(self._pipeline_modification_poll_interval)
+        self._wait_for_state(Gst.State.NULL)
