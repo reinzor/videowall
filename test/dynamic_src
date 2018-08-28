@@ -79,20 +79,20 @@ def timeout_cb(pdata):
 
     return GLib.SOURCE_REMOVE
 
-
+parser = None
 decoder = None
 def demuxer_cb(demuxer, pad):
     if pad.name == 'video_0':
-        sink = decoder.get_static_pad('sink')
+        sink = parser.get_static_pad('sink')
         print "Linking pad {} of element {} with pad {} of element {}".format(pad.name,
                                                                               demuxer.name,
                                                                               sink.name,
-                                                                              decoder.name)
+                                                                              parser.name)
         pad.link(sink)
 
 
 def main(args):
-    global decoder
+    global decoder, parser
 
     GObject.threads_init()
     Gst.init(None)
@@ -104,7 +104,7 @@ def main(args):
     src.set_property("location", filenames[0])
     demux = Gst.ElementFactory.make('qtdemux', 'demux')
     demux.connect('pad-added', demuxer_cb)
-    # h264parse = Gst.ElementFactory.make('h264parse')
+    parser = Gst.ElementFactory.make('h264parse', 'parser')
     decoder = Gst.ElementFactory.make('avdec_h264', 'decoder')
     videoconvert = Gst.ElementFactory.make('videoconvert')
     queue = Gst.ElementFactory.make('queue')
@@ -112,11 +112,11 @@ def main(args):
 
     # import ipdb; ipdb.set_trace()
 
-    pipe.add(src, demux, decoder, videoconvert, queue, sink)
+    pipe.add(src, demux, parser, decoder, videoconvert, queue, sink)
 
     src.link(demux)
-    # qtdemux.link(avdec_h264)
-    # h264parse.link(avdec_h264)
+    # qtdemux.link(avdec_h264) - Done dynamically
+    parser.link(decoder)
     decoder.link(videoconvert)
     videoconvert.link(queue)
     queue.link(sink)
