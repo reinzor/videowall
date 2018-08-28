@@ -4,7 +4,7 @@ import socket
 import threading
 import time
 
-from videowall.gi_version import Gst, GObject
+from videowall.gi_version import GLib, Gst, GObject
 from videowall.networking.message_definition import VideocropConfig
 
 from .player_exceptions import PlayerException
@@ -15,6 +15,7 @@ logger = logging.getLogger(__name__)
 
 class Player(object):
     Gst.init(None)
+    GObject.threads_init()
 
     def __init__(self, platform, show_gui=True):
         if not issubclass(platform, PlayerPlatform):
@@ -28,11 +29,11 @@ class Player(object):
         self._show_gui = show_gui
         self._pipeline = None
 
-        # def run_player_thread():
-        #     GObject.MainLoop().run()
-        #
-        # self._gobject_thread = threading.Thread(target=run_player_thread)
-        # self._gobject_thread.start()
+        def run_player_thread():
+            GObject.MainLoop().run()
+
+        self._gobject_thread = threading.Thread(target=run_player_thread)
+        self._gobject_thread.start()
 
         logger.debug("Player constructed")
 
@@ -91,11 +92,12 @@ class Player(object):
 
     def _set_pipeline_state(self, state):
         logger.info("Setting the pipeline state to %s ... ", state)
-        self._pipeline.set_state(state)
+        GLib.idle_add(self._pipeline.set_state, state)
 
-        if state == Gst.State.PLAYING:
-            while self.get_duration() == 0:
-                time.sleep(0.1)
+        time.sleep(1)
+        # if state == Gst.State.PLAYING:
+        #     while self.get_duration() == 0:
+        #         time.sleep(0.1)
 
     def play(self, filename, videocrop_config=VideocropConfig(0, 0, 0, 0)):
         self._construct_pipeline(filename, videocrop_config)
@@ -103,7 +105,6 @@ class Player(object):
 
     def stop(self):
         self._set_pipeline_state(Gst.State.NULL)
-        del self._pipeline
 
     def is_playing(self):
         return self._get_pipeline_state() == Gst.State.PLAYING
