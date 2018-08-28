@@ -95,7 +95,7 @@ class Player(object):
     def _g_on_bus_msg(self, bus, msg):
         if msg is not None:
             if msg.type is Gst.MessageType.STATE_CHANGED:
-                _, newstate, _ = msg.parse_state_changed().newstate
+                _, newstate, _ = msg.parse_state_changed()
                 if self._state != newstate:
                     logger.debug("Pipeline state changed to %s ... ", self._state)
                     self._state = newstate
