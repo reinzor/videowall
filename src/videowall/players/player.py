@@ -33,7 +33,7 @@ class Player(object):
         self._duration = 0
         self._g_timer_callback_interval = 100
         self._wait_for_state_interval = 0.1
-        self._wait_for_state_max_duration = 0
+        self._wait_for_state_max_duration = 5
 
         GLib.timeout_add(self._g_timer_callback_interval, self._g_timer_callback)
 
