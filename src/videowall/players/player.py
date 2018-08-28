@@ -97,7 +97,6 @@ class Player(object):
         self._pipeline = Gst.parse_launch(launch_cmd)
 
         sink = self._pipeline.get_child_by_index(0)
-        sink.set_property("force-aspect-ratio", True)
         sink.set_window_handle(self._movie_view.get_property('window').get_xid())
 
         self._pipeline.get_bus().connect("message", self._g_on_bus_msg)
