@@ -3,7 +3,7 @@
 import logging
 from argparse import ArgumentParser
 
-from videowall.client import Client, ClientSubprocess
+from videowall.client import Client
 from videowall.players import get_player_platform_strings, player_platform_from_string
 
 if __name__ == '__main__':
@@ -18,7 +18,7 @@ if __name__ == '__main__':
     if args.verbose:
         logging.getLogger().setLevel(logging.DEBUG)
 
-    client = ClientSubprocess(args.ip, player_platform_from_string(args.player_platform), args.broadcast_port)
+    client = Client(args.ip, player_platform_from_string(args.player_platform), args.broadcast_port)
     try:
         client.run()
     except KeyboardInterrupt:
