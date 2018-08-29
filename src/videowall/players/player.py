@@ -17,7 +17,7 @@ class Player(object):
     Gst.init(None)
     GObject.threads_init()
 
-    def __init__(self, platform, show_gui=True, name="Player"):
+    def __init__(self, platform, show_gui=True, name="Player", time_overlay=False, text_overlay=''):
         if not issubclass(platform, PlayerPlatform):
             raise PlayerException("Invalid player platform {}, available platforms: {}".format(platform,
                                                                                                get_player_platforms()))
@@ -39,6 +39,8 @@ class Player(object):
         self._g_timer_callback_interval = 100
         self._wait_for_state_interval = 0.1
         self._wait_for_state_max_duration = 5
+        self._time_overlay = time_overlay
+        self._text_overlay = text_overlay + ' - res={}x{}'.format(self._screen_width, self._screen_height)
 
         GLib.timeout_add(self._g_timer_callback_interval, self._g_timer_callback)
 
@@ -89,7 +91,12 @@ class Player(object):
                                                                                   videocrop_config.left,
                                                                                   videocrop_config.right,
                                                                                   videocrop_config.top)
-            launch_cmd += " ! videoconvert ! queue ! ximagesink"
+            launch_cmd += " ! videoconvert"
+            if self._text_overlay:
+                launch_cmd += ' ! textoverlay text="{}"'.format(self._text_overlay)
+            if self._time_overlay:
+                launch_cmd += " ! timeoverlay"
+            launch_cmd += "! queue ! ximagesink"
         else:
             launch_cmd += " ! fakesink"
 

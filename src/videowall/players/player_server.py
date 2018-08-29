@@ -1,18 +1,19 @@
 import logging
+
 from videowall.gi_version import Gst, GstNet, GLib
 from videowall.networking.message_definition import VideocropConfig
 from videowall.util import validate_ip_port
 
-from .player_exceptions import PlayerException
-
 from .player import Player
+from .player_exceptions import PlayerException
 
 logger = logging.getLogger(__name__)
 
 
 class PlayerServer(Player):
     def __init__(self, player_platform, ip, port, show_gui):
-        super(PlayerServer, self).__init__(player_platform, show_gui, "PlayerServer")
+        super(PlayerServer, self).__init__(player_platform, show_gui, "PlayerServer", True,
+                                           "Clock server {}:{}".format(ip, port))
         validate_ip_port(ip, port)
 
         self._ip = ip

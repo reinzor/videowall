@@ -11,8 +11,8 @@ logger = logging.getLogger(__name__)
 
 
 class PlayerClient(Player):
-    def __init__(self, player_platform):
-        super(PlayerClient, self).__init__(player_platform, True, "PlayerClient")
+    def __init__(self, player_platform, time_overlay, text_overlay):
+        super(PlayerClient, self).__init__(player_platform, True, "PlayerClient", time_overlay, text_overlay)
 
         logger.debug("PlayerClient(player_platform=%s) constructed", player_platform)
 

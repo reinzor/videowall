@@ -23,7 +23,7 @@ if __name__ == '__main__':
     if args.verbose:
         logging.getLogger().setLevel(logging.DEBUG)
 
-    player = PlayerClient(player_platform_from_string(args.platform))
+    player = PlayerClient(player_platform_from_string(args.platform), True, args.ip)
 
     player.play(args.filename, args.base_time, args.ip, args.port)
 
