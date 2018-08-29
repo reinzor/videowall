@@ -17,20 +17,16 @@ class Player(object):
     Gst.init(None)
     GObject.threads_init()
 
-    def __init__(self, platform, show_gui=True, name="Player", time_overlay=False, text_overlay=''):
+    def __init__(self, platform, name="Player", time_overlay=False, text_overlay=''):
         if not issubclass(platform, PlayerPlatform):
             raise PlayerException("Invalid player platform {}, available platforms: {}".format(platform,
                                                                                                get_player_platforms()))
-
-        if not isinstance(show_gui, bool):
-            raise PlayerException("show_gui should be a boolean")
 
         screen = Gdk.Screen.get_default()
         self._screen_width = screen.get_width()
         self._screen_height = screen.get_height()
 
         self._platform = platform
-        self._show_gui = show_gui
         self._g_pipeline = None
         self._state = Gst.State.NULL
         self._position = 0
@@ -40,7 +36,7 @@ class Player(object):
         self._wait_for_state_interval = 0.1
         self._wait_for_state_max_duration = 5
         self._time_overlay = time_overlay
-        self._text_overlay = text_overlay + ' - res={}x{}'.format(self._screen_width, self._screen_height)
+        self._text_overlay = text_overlay + ' | {}x{}'.format(self._screen_width, self._screen_height)
 
         GLib.timeout_add(self._g_timer_callback_interval, self._g_timer_callback)
 
@@ -72,20 +68,18 @@ class Player(object):
 
     def _g_construct_pipeline(self, filename, videocrop_config):
         real_path = os.path.realpath(os.path.expanduser(filename))
-        if not os.path.isfile(real_path):
-            raise PlayerException("File '{}' does not exist!".format(filename))
 
-        launch_cmd = "filesrc location={}".format(filename)
+        if os.environ.get('DISPLAY') is None:
+            raise PlayerException("No $DISPLAY environment variable is set, the ximagesink will not work")
 
-        if self._platform == PlayerPlatformPC:
-            launch_cmd += " ! decodebin"
-        elif self._platform == PlayerPlatformRaspberryPi:
-            launch_cmd += " ! qtdemux ! h264parse ! omxh264dec"
+        launch_cmd = ""
+        if os.path.isfile(real_path):
+            launch_cmd += "filesrc location={}".format(real_path)
 
-        gui = True  # TODO: Remove, first get GTK to work properly
-        if gui:
-            if os.environ.get('DISPLAY') is None:
-                raise PlayerException("No $DISPLAY environment variable is set, the ximagesink will not work")
+            if self._platform == PlayerPlatformPC:
+                launch_cmd += " ! decodebin"
+            elif self._platform == PlayerPlatformRaspberryPi:
+                launch_cmd += " ! qtdemux ! h264parse ! omxh264dec"
 
             launch_cmd += " ! videocrop bottom={} left={} right={} top={}".format(videocrop_config.bottom,
                                                                                   videocrop_config.left,
@@ -97,11 +91,17 @@ class Player(object):
             if self._time_overlay:
                 launch_cmd += " ! timeoverlay"
             launch_cmd += "! queue ! ximagesink"
+
+            logger.debug("Creating pipeline from launch command %s ..", launch_cmd)
         else:
-            launch_cmd += " ! fakesink"
+            error_image_location = os.path.join(os.path.dirname(os.path.realpath(__file__)), "assets", "error.jpg")
+            launch_cmd += "filesrc location={}".format(error_image_location)
+            launch_cmd += " ! jpegparse ! jpegdec ! imagefreeze"
+            if self._text_overlay:
+                launch_cmd += ' ! textoverlay text="{}\n{}"'.format("%s not found" % filename, self._text_overlay)
+            launch_cmd += " ! videoconvert ! ximagesink"
 
-        logger.debug("Creating pipeline from launch command %s ..", launch_cmd)
-
+        logger.debug("gst-launch-1.0 -v %s", launch_cmd)
         self._g_pipeline = Gst.parse_launch(launch_cmd)
         self._filename = filename
 

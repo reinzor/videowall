@@ -11,8 +11,8 @@ logger = logging.getLogger(__name__)
 
 
 class PlayerServer(Player):
-    def __init__(self, player_platform, ip, port, show_gui):
-        super(PlayerServer, self).__init__(player_platform, show_gui, "PlayerServer", True,
+    def __init__(self, player_platform, ip, port):
+        super(PlayerServer, self).__init__(player_platform, "PlayerServer", True,
                                            "Clock server {}:{}".format(ip, port))
         validate_ip_port(ip, port)
 

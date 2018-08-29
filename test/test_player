@@ -20,7 +20,6 @@ if __name__ == '__main__':
     parser.add_argument('platform', choices=get_player_platform_strings())
     parser.add_argument('filename', nargs='+')
     parser.add_argument('--spin_rate', type=validate_positive_int_argument, default=5)
-    parser.add_argument('--gui', action='store_true')
 
     # Add some randomness to test the player
     parser.add_argument('--min_duration', type=validate_positive_int_argument, default=10)
@@ -35,7 +34,7 @@ if __name__ == '__main__':
 
     logging.getLogger().setLevel(logging.DEBUG)
 
-    player = Player(player_platform_from_string(args.platform), args.gui)
+    player = Player(player_platform_from_string(args.platform))
 
     while True:
         filename = filenames[0]

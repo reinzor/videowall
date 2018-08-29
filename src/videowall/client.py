@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 class Client(object):
     def __init__(self, ip, player_platform, broadcast_port):
         self._networking = NetworkingClient(ip, broadcast_port)
-        self._player = PlayerClient(player_platform, True, "ip={}".format(ip))
+        self._player = PlayerClient(player_platform, True, ip)
 
     @staticmethod
     def _get_client_specific_config(ip, client_config):

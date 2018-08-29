@@ -8,9 +8,9 @@ logger = logging.getLogger(__name__)
 
 
 class Server(object):
-    def __init__(self, player_platform, base_time_offset, ip, broadcast_port, clock_port, gui, client_config_dict):
+    def __init__(self, player_platform, base_time_offset, ip, broadcast_port, clock_port, client_config_dict):
         self._networking = NetworkingServer(broadcast_port)
-        self._player = PlayerServer(player_platform, ip, clock_port, gui)
+        self._player = PlayerServer(player_platform, ip, clock_port)
         self._base_time_offset = base_time_offset
 
         self._client_config_dict = client_config_dict

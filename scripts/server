@@ -18,7 +18,6 @@ if __name__ == '__main__':
     parser.add_argument('filename', nargs='+')
     parser.add_argument('--base_time_offset', type=validate_positive_int_argument, default=5000000000)
     parser.add_argument('--spin_rate', type=validate_positive_int_argument, default=5)
-    parser.add_argument('--gui', action='store_true')
     parser.add_argument('--broadcast_port', default=2000)
     parser.add_argument('--clock_port', default=2222)
 
@@ -33,7 +32,7 @@ if __name__ == '__main__':
     filenames = collections.deque(args.filename)
 
     server = Server(player_platform_from_string(args.platform), args.base_time_offset, ip_from_ifname(args.ifname),
-                    args.broadcast_port, args.clock_port, args.gui, args.client_config)
+                    args.broadcast_port, args.clock_port, args.client_config)
 
     while True:
         try:
