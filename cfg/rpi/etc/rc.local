@@ -1,0 +1,25 @@
+#!/bin/bash -e
+
+if [ ! -f /etc/network/mac ]; then
+  mac=`echo -n 00:60:2F; dd bs=1 count=3 if=/dev/random 2>/dev/null |hexdump -v -e '/1 ":%02X"'`
+  
+  echo -e " auto lo\n"\
+         "iface lo inet loopback\n"\
+         "\n"\
+         "allow-hotplug eth0\n"\
+         "iface eth0 inet dhcp\n"\
+         "  hwaddress ether ${mac}\n" > /etc/network/interfaces
+
+  echo $mac > /etc/network/mac
+  echo "Changed the MAC address to ${mac} , rebooting ..."
+
+  reboot
+fi
+
+# Print the IP address
+_IP=$(hostname -I) || true
+if [ "$_IP" ]; then
+  printf "My IP address is %s\n" "$_IP"
+fi
+
+exit 0
