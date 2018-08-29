@@ -138,11 +138,33 @@ class Player(object):
             logger.warn("[%.2f/%.2f] Waiting for state transition to %s", dt, self._wait_for_state_max_duration, state)
             time.sleep(self._wait_for_state_interval)
 
+        if state == Gst.State.PLAYING:
+            while self._duration == 0:
+                dt = time.time() - t_start
+                if dt > self._wait_for_state_max_duration:
+                    logger.fatal("Duration was not set within %.2f seconds!", self._wait_for_state_max_duration)
+                    sys.exit(1)
+                logger.warn("[%.2f/%.2f] Waiting for duration to be set", dt, self._wait_for_state_max_duration)
+                time.sleep(self._wait_for_state_interval)
+
+    def close(self):
+        Gtk.main_quit()
+        logger.info("Waiting for the GTK Thread to join ..")
+        self._gobject_thread.join()
+
     def get_position(self):
         return self._position
 
+    def get_position_seconds(self):
+        return round(self.get_position() / 1e9, 2)
+
     def get_duration(self):
+        if self._duration == 0:
+            raise PlayerException("Please call play first!")
         return self._duration
+
+    def get_duration_seconds(self):
+        return round(self.get_duration() / 1e9, 2)
 
     def get_filename(self):
         if self._filename is None:
@@ -153,6 +175,14 @@ class Player(object):
         self.stop()
 
         GLib.idle_add(self._g_construct_pipeline, filename, videocrop_config)
+        self._wait_for_state(Gst.State.PLAYING)
+
+    def pause(self):
+        GLib.idle_add(self._g_set_pipeline_state, Gst.State.PAUSED)
+        self._wait_for_state(Gst.State.PAUSED)
+
+    def resume(self):
+        GLib.idle_add(self._g_set_pipeline_state, Gst.State.PLAYING)
         self._wait_for_state(Gst.State.PLAYING)
 
     def stop(self):

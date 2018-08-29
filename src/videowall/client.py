@@ -25,3 +25,6 @@ class Client(object):
             client_cfg = self._get_client_specific_config(msg.client_config)
 
             self._player.play(msg.filename, msg.base_time, msg.ip, msg.clock_port, client_cfg.videocrop_config)
+
+    def close(self):
+        self._player.close()

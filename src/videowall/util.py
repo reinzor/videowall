@@ -29,14 +29,12 @@ def to_dict(obj):
         return obj
 
 
-def validate_ip_port(ip, port):
+def validate_ip(ip):
     try:
         socket.inet_pton(socket.AF_INET, ip)
     except socket.error as e:
-        raise Exception(e)
-
-    if not isinstance(port, int):
-        raise Exception("Port should be an integer, current value: {}".format(port))
+        raise argparse.ArgumentTypeError(e)
+    return ip
 
 
 def validate_positive_int_argument(value):
@@ -44,6 +42,12 @@ def validate_positive_int_argument(value):
     if ivalue <= 0:
         raise argparse.ArgumentTypeError("%s is an invalid positive int value" % value)
     return ivalue
+
+
+def validate_ip_port(ip, port):
+    validate_ip(ip)
+    validate_positive_int_argument(port)
+    return ip, port
 
 
 def validate_positive_or_zero_int_argument(value):

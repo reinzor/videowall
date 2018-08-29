@@ -21,22 +21,22 @@ class PlayerServer(Player):
 
         logger.debug("PlayerServer(player_platform=%s, ip=%s, port=%s) constructed", player_platform, ip, port)
 
-    def _g_construct_pipeline_with_clock_server(self, filename, videocrop_config):
+    def _g_construct_pipeline_with_clock_server(self, filename, base_time_offset, videocrop_config):
         self._g_construct_pipeline(filename, videocrop_config)
 
         clock = Gst.SystemClock.obtain()
         self._g_pipeline.use_clock(clock)
         self._g_clock_provider = GstNet.NetTimeProvider.new(clock, None, self._port)
 
-        self._base_time = clock.get_time()
+        self._base_time = clock.get_time() + base_time_offset
 
         self._g_pipeline.set_start_time(Gst.CLOCK_TIME_NONE)
         self._g_pipeline.set_base_time(self._base_time)
 
-    def play(self, filename, videocrop_config=VideocropConfig(0, 0, 0, 0)):
+    def play(self, filename, base_time_offset, videocrop_config=VideocropConfig(0, 0, 0, 0)):
         self.stop()
 
-        GLib.idle_add(self._g_construct_pipeline_with_clock_server, filename, videocrop_config)
+        GLib.idle_add(self._g_construct_pipeline_with_clock_server, filename, base_time_offset, videocrop_config)
         self._wait_for_state(Gst.State.PLAYING)
 
     def get_ip(self):

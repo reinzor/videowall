@@ -5,6 +5,7 @@ import logging
 import time
 from argparse import ArgumentParser
 
+from tqdm import tqdm
 from videowall.players import get_player_platform_strings, player_platform_from_string
 from videowall.server import Server
 from videowall.util import validate_positive_int_argument
@@ -13,6 +14,7 @@ if __name__ == '__main__':
     parser = ArgumentParser()
     parser.add_argument('platform', choices=get_player_platform_strings())
     parser.add_argument('filename', nargs='+')
+    parser.add_argument('--base_time_offset', type=validate_positive_int_argument, default=5000000000)
     parser.add_argument('--spin_rate', type=validate_positive_int_argument, default=5)
     parser.add_argument('--gui', action='store_true')
     parser.add_argument('--ip', default='127.0.0.1')
@@ -29,16 +31,24 @@ if __name__ == '__main__':
 
     filenames = collections.deque(args.filename)
 
-    server = Server(player_platform_from_string(args.platform), args.ip, args.broadcast_port, args.clock_port, args.gui,
-                    args.client_config)
+    server = Server(player_platform_from_string(args.platform), args.base_time_offset, args.ip, args.broadcast_port,
+                    args.clock_port, args.gui, args.client_config)
 
     while True:
-        filename = filenames[0]
-        logging.info("Playing file %s", filename)
+        try:
+            filename = filenames[0]
+            logging.info("Playing file %s", filename)
 
-        server.play(filename)
+            server.play(filename)
 
-        while server.is_playing():
-            time.sleep(1. / args.spin_rate)
+            with tqdm(total=server.get_duration_seconds(),
+                      bar_format='Playing: {l_bar}{bar} | {n_fmt}/{total_fmt}') as progress_bar:
+                while server.is_playing():
+                    progress_bar.update(server.get_position_seconds() - progress_bar.n)
+                    time.sleep(1. / args.spin_rate)
 
-        filenames.rotate()
+            filenames.rotate()
+        except KeyboardInterrupt:
+            break
+
+    server.close()
