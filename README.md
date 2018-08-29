@@ -1,5 +1,7 @@
 # Videowall (WIP)
 
+![2 monitor example](doc/example_2monitor.gif)
+
 Video wall with multiple tiles that enables synchronized video playback, mirrored or tiled.
 
 ## Installation
