@@ -8,7 +8,7 @@ from videowall.gi_version import GLib, Gst, GObject, Gdk, Gtk
 from videowall.networking.message_definition import VideocropConfig
 
 from .player_exceptions import PlayerException
-from .player_platforms import PlayerPlatform, PlayerPlatformX86, PlayerPlatformRaspberryPi, get_player_platforms
+from .player_platforms import PlayerPlatform, PlayerPlatformPC, PlayerPlatformRaspberryPi, get_player_platforms
 
 logger = logging.getLogger(__name__)
 
@@ -75,7 +75,7 @@ class Player(object):
 
         launch_cmd = "filesrc location={}".format(filename)
 
-        if self._platform == PlayerPlatformX86:
+        if self._platform == PlayerPlatformPC:
             launch_cmd += " ! decodebin"
         elif self._platform == PlayerPlatformRaspberryPi:
             launch_cmd += " ! qtdemux ! h264parse ! omxh264dec"

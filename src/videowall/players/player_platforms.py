@@ -5,7 +5,7 @@ class PlayerPlatform(object):
     pass
 
 
-class PlayerPlatformX86(PlayerPlatform):
+class PlayerPlatformPC(PlayerPlatform):
     pass
 
 
@@ -14,12 +14,12 @@ class PlayerPlatformRaspberryPi(PlayerPlatform):
 
 
 _string_player_platform_map = {
-  "x86": PlayerPlatformX86,
+  "pc": PlayerPlatformPC,
   "rpi": PlayerPlatformRaspberryPi
 }
 
 _platform_player_string_map = {
-  PlayerPlatformX86: "x86",
+  PlayerPlatformPC: "pc",
   PlayerPlatformRaspberryPi: "rpi"
 }
 
