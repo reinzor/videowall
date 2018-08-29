@@ -18,6 +18,11 @@ _string_player_platform_map = {
   "rpi": PlayerPlatformRaspberryPi
 }
 
+_platform_player_string_map = {
+  PlayerPlatformX86: "x86",
+  PlayerPlatformRaspberryPi: "rpi"
+}
+
 
 def player_platform_from_string(string):
     try:
@@ -26,6 +31,15 @@ def player_platform_from_string(string):
         raise PlayerException(e)
     else:
         return platform
+
+
+def string_from_player_platform(player_platform):
+    try:
+        string = _platform_player_string_map[player_platform]
+    except KeyError as e:
+        raise PlayerException(e)
+    else:
+        return string
 
 
 def get_player_platform_strings():
