@@ -1,0 +1,11 @@
+[Unit]
+Description=Videowall
+After=getty.target
+
+[Install]
+WantedBy=multi-user.target
+
+[Service]
+User=pi
+ExecStart=/bin/bash -c "source /home/pi/videowall/setup.bash && /home/pi/videowall/scripts/client rpi 127.0.0.1"
+
