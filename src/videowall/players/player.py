@@ -90,7 +90,7 @@ class Player(object):
                 launch_cmd += ' ! textoverlay text="{}"'.format(self._text_overlay)
             if self._time_overlay:
                 launch_cmd += " ! timeoverlay"
-            launch_cmd += "! queue ! ximagesink"
+            launch_cmd += "! queue"
 
             logger.debug("Creating pipeline from launch command %s ..", launch_cmd)
         else:
@@ -99,7 +99,9 @@ class Player(object):
             launch_cmd += " ! jpegparse ! jpegdec ! imagefreeze"
             if self._text_overlay:
                 launch_cmd += ' ! textoverlay text="{}\n{}"'.format("%s not found" % filename, self._text_overlay)
-            launch_cmd += " ! videoconvert ! ximagesink"
+            launch_cmd += " ! videoconvert"
+
+        launch_cmd = " ! ximagesink" # or ! fakesink sync=true # sync required for realtime playback
 
         logger.debug("gst-launch-1.0 -v %s", launch_cmd)
         self._g_pipeline = Gst.parse_launch(launch_cmd)
