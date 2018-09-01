@@ -4,19 +4,20 @@ import logging
 import time
 from argparse import ArgumentParser
 from videowall.networking import NetworkingServer
-from videowall.networking.message_definition import BroadcastMessage, ClientConfig
+from videowall.networking.message_definition import ServerBroadcastMessage, ClientConfig
+from videowall.util import validate_positive_int_argument
 
 if __name__ == '__main__':
     parser = ArgumentParser()
 
     parser.add_argument('--filename', default='file.mp4')
-    parser.add_argument('--player_ip', default='127.0.0.1')
-    parser.add_argument('--player_port', type=int, default=11111)
-    parser.add_argument('--broadcast_port', type=int, default=2000)
-    parser.add_argument('--broadcast_interval', type=float, default=1.0)
-    parser.add_argument('--client_seek_lookahead', type=int, default=5000000000)
-    parser.add_argument('--client_seek_grace_time', type=int, default=500000000)
+    parser.add_argument('--ip', default='127.0.0.1')
+    parser.add_argument('--clock_port', type=validate_positive_int_argument, default=11111)
+    parser.add_argument('--server_broadcast_port', type=validate_positive_int_argument, default=2000)
+    parser.add_argument('--server_broadcast_interval', type=float, default=1.0)
+    parser.add_argument('--client_broadcast_port', type=validate_positive_int_argument, default=2001)
     parser.add_argument('--client_config', type=json.loads, default='{}')
+    parser.add_argument('--buffer_size', type=validate_positive_int_argument, default=1024)
 
     args = parser.parse_args()
 
@@ -24,17 +25,17 @@ if __name__ == '__main__':
 
     logging.info("Client config: %s", args.client_config)
 
-    server = NetworkingServer(args.broadcast_port)
-    while True:
-        server.send_broadcast(BroadcastMessage(
-            filename=args.filename,
-            base_time=int(time.time() / 1e-9),
-            position=0,
-            seek_grace_time=args.client_seek_grace_time,
-            seek_lookahead=args.client_seek_lookahead,
-            duration=0,
-            player_ip=args.player_ip,
-            player_port=args.player_port,
-            client_config={ip: ClientConfig(**cfg) for ip, cfg in args.client_config.iteritems()}
-        ))
-        time.sleep(args.broadcast_interval)
+    server = NetworkingServer(args.server_broadcast_port, args.client_broadcast_port, args.buffer_size)
+    try:
+        while True:
+            server.send_broadcast(ServerBroadcastMessage(
+                filename=args.filename,
+                base_time=int(time.time() / 1e-9),
+                ip=args.ip,
+                clock_port=args.clock_port,
+                client_config={ip: ClientConfig(**cfg) for ip, cfg in args.client_config.iteritems()}
+            ))
+            time.sleep(args.server_broadcast_interval)
+    except KeyboardInterrupt:
+        print "dsa"
+        server.close()

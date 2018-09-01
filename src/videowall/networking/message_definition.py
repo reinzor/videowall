@@ -36,7 +36,7 @@ class ClientConfig(Message):
         return ClientConfig(VideocropConfig.get_default().to_dict())
 
 
-class BroadcastMessage(Message):
+class ServerBroadcastMessage(Message):
     def __init__(self, filename, base_time, ip, clock_port, client_config):
         try:
             self.filename = filename
@@ -58,3 +58,8 @@ class BroadcastMessage(Message):
                 self.client_config[ip] = ClientConfig(**cfg)
         except Exception as e:
             raise NetworkingException(e)
+
+
+class ClientBroadcastMessage(Message):
+    def __init__(self, ip):
+        self.ip = ip

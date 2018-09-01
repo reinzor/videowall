@@ -101,7 +101,7 @@ class Player(object):
                 launch_cmd += ' ! textoverlay text="{}\n{}"'.format("%s not found" % filename, self._text_overlay)
             launch_cmd += " ! videoconvert"
 
-        launch_cmd = " ! ximagesink" # or ! fakesink sync=true # sync required for realtime playback
+        launch_cmd += " ! ximagesink"   # or ! fakesink sync=true # sync required for realtime playback
 
         logger.debug("gst-launch-1.0 -v %s", launch_cmd)
         self._g_pipeline = Gst.parse_launch(launch_cmd)

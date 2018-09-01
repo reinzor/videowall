@@ -6,21 +6,27 @@ from argparse import ArgumentParser
 
 from videowall.client import Client
 from videowall.players import get_player_platform_strings, player_platform_from_string
-from videowall.util import ip_from_ifname
+from videowall.util import ip_from_ifname, validate_positive_int_argument
 
 if __name__ == '__main__':
     parser = ArgumentParser()
     parser.add_argument('player_platform', choices=get_player_platform_strings())
     parser.add_argument('ifname', choices=os.listdir('/sys/class/net/'))
     parser.add_argument('--verbose', action='store_true')
-    parser.add_argument('--broadcast_port', type=int, default=2000)
+    parser.add_argument('--server_broadcast_port', type=validate_positive_int_argument, default=2000)
+    parser.add_argument('--client_broadcast_port', type=validate_positive_int_argument, default=2001)
+    parser.add_argument('--client_broadcast_interval', type=validate_positive_int_argument, default=1)
 
     args = parser.parse_args()
 
     if args.verbose:
         logging.getLogger().setLevel(logging.DEBUG)
 
-    client = Client(ip_from_ifname(args.ifname), player_platform_from_string(args.player_platform), args.broadcast_port)
+    client = Client(ip_from_ifname(args.ifname),
+                    player_platform_from_string(args.player_platform),
+                    args.server_broadcast_port,
+                    args.client_broadcast_port,
+                    args.client_broadcast_interval)
     try:
         client.run()
     except KeyboardInterrupt:
