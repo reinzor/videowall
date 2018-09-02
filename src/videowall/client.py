@@ -3,7 +3,7 @@ import socket
 
 from videowall.networking import NetworkingClient
 from videowall.networking.message_definition import ClientConfig
-from videowall.players import PlayerClient
+from videowall.player import PlayerClient
 
 logger = logging.getLogger(__name__)
 

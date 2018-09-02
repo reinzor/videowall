@@ -7,7 +7,7 @@ import time
 from argparse import ArgumentParser
 
 from videowall.networking.message_definition import VideocropConfig
-from videowall.players import Player, get_player_platform_strings, player_platform_from_string
+from videowall.player import Player, get_player_platform_strings, player_platform_from_string
 from videowall.util import validate_positive_int_argument, validate_positive_or_zero_int_argument
 
 

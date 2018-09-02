@@ -2,7 +2,7 @@ import logging
 
 from .networking import NetworkingServer
 from .networking.message_definition import ServerBroadcastMessage
-from .players import PlayerServer
+from .player import PlayerServer
 
 logger = logging.getLogger(__name__)
 

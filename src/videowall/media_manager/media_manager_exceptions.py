@@ -1,0 +1,2 @@
+class MediaManagerException(Exception):
+    pass

@@ -7,7 +7,7 @@ import time
 from argparse import ArgumentParser
 
 from tqdm import tqdm
-from videowall.players import get_player_platform_strings, player_platform_from_string
+from videowall.player import get_player_platform_strings, player_platform_from_string
 from videowall.server import Server
 from videowall.util import validate_positive_int_argument, ip_from_ifname
 

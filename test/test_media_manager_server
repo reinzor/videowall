@@ -1,0 +1,21 @@
+#!/usr/bin/env python
+import logging
+from argparse import ArgumentParser
+
+from videowall.media_manager import MediaManagerServer
+
+
+if __name__ == '__main__':
+    parser = ArgumentParser()
+
+    parser.add_argument('remotes', nargs="+")
+
+    parser.add_argument('--base_path', default='~/Videos')
+
+    args = parser.parse_args()
+
+    logging.getLogger().setLevel(logging.DEBUG)
+
+    manager = MediaManagerServer(args.base_path)
+    logging.info("Filenames: %s", manager.get_filenames())
+    manager.sync(args.remotes)
