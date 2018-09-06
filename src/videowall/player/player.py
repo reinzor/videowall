@@ -175,23 +175,10 @@ class Player(object):
     def get_duration_seconds(self):
         return round(self.get_duration() / 1e9, 2)
 
-    def get_filename(self):
-        if self._filename is None:
-            raise PlayerException("No filename available, please first play a file")
-        return self._filename
-
     def play(self, filename, videocrop_config=VideocropConfig(0, 0, 0, 0)):
         self.stop()
 
         GLib.idle_add(self._g_construct_pipeline, filename, videocrop_config)
-        self._wait_for_state(Gst.State.PLAYING)
-
-    def pause(self):
-        GLib.idle_add(self._g_set_pipeline_state, Gst.State.PAUSED)
-        self._wait_for_state(Gst.State.PAUSED)
-
-    def resume(self):
-        GLib.idle_add(self._g_set_pipeline_state, Gst.State.PLAYING)
         self._wait_for_state(Gst.State.PLAYING)
 
     def stop(self):

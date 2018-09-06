@@ -29,7 +29,7 @@ if __name__ == '__main__':
 
     logging.info("Playing file %s", args.filename)
     logging.info("Start local client with: ./player_client --ip %s --port %d %s %s %s",
-                 player.get_ip(), player.get_port(), args.platform, player.get_filename(), player.get_base_time())
+                 player.get_ip(), player.get_port(), args.platform, args.filename, player.get_base_time())
 
     with tqdm(total=player.get_duration_seconds(),
               bar_format='Playing: {l_bar}{bar} | {n_fmt}/{total_fmt}') as progress_bar:
