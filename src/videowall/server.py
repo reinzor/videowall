@@ -45,3 +45,6 @@ class Server(object):
 
     def get_clients(self):
         return self._networking.get_clients()
+
+    def sync_media(self, remote_paths):
+        self._media_manager.sync(remote_paths)

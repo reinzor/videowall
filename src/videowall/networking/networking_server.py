@@ -1,13 +1,16 @@
 import json
-import socket
 import logging
+import socket
 import threading
 import time
+from collections import namedtuple
 
 from .message_definition import ServerBroadcastMessage, ClientBroadcastMessage
 from .networking_exceptions import NetworkingException
 
 logger = logging.getLogger(__name__)
+
+Client = namedtuple('Client', 'username ip media_path age')
 
 
 class NetworkingServer(object):
@@ -41,7 +44,7 @@ class NetworkingServer(object):
                         logger.debug("Client broadcast received: %s", msg)
                         self._clients[msg.ip] = {
                             "time": time.time(),
-                            "msg": msg.to_dict()
+                            "msg": msg
                         }
 
         self._receive_client_broadcast_thread = threading.Thread(target=receive_client_broadcast)
@@ -56,9 +59,14 @@ class NetworkingServer(object):
 
     def get_clients(self):
         now = time.time()
-        return {ip: {"age": now - data["time"], "msg": data["msg"]} for ip, data in self._clients.iteritems()}
+        print self._clients
+        return [Client(
+            c["msg"].username,
+            c["msg"].ip,
+            c["msg"].media_path,
+            now - c["time"]
+        ) for c in self._clients.values()]
 
     def close(self):
         self._close = True
         self._receive_client_broadcast_thread.join()
-

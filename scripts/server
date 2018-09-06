@@ -40,6 +40,8 @@ if __name__ == '__main__':
     time.sleep(2)
 
     logging.info("Client list: %s", server.get_clients())
+    client_remote_media_paths = ["{}@{}:{}".format(c.username, c.ip, c.media_path) for c in server.get_clients()]
+    server.sync_media(client_remote_media_paths)
 
     while True:
         try:
