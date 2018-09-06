@@ -36,10 +36,9 @@ if __name__ == '__main__':
 
     filenames = collections.deque(server.get_media_filenames())
 
-    # Wait 2 seconds so we can obtain a client list (clients broadcast every second)
-    time.sleep(2)
+    # Wait 5 seconds so we can obtain a client list (clients broadcast every second)
+    time.sleep(5)
 
-    logging.info("Client list: %s", server.get_clients())
     client_remote_media_paths = ["{}@{}:{}".format(c.username, c.ip, c.media_path) for c in server.get_clients()]
     server.sync_media(client_remote_media_paths)
 

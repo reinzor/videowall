@@ -59,7 +59,6 @@ class NetworkingServer(object):
 
     def get_clients(self):
         now = time.time()
-        print self._clients
         return [RemoteClient(
             c["msg"].username,
             c["msg"].ip,
