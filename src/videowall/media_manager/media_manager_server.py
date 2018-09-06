@@ -10,8 +10,8 @@ from .media_manager import MediaManager
 logger = logging.getLogger(__name__)
 
 
-def _rsync(local_path, remote_path):
-    cmd = 'rsync -avzP {} {}'.format(local_path, remote_path)
+def _rsync(local_filenames, remote_path):
+    cmd = 'rsync -avzP {} {}'.format(" ".join(local_filenames), remote_path)
     logger.debug('rsync command: %s', cmd)
     t_start = time.time()
     with open(os.devnull, 'w') as DEVNULL:
@@ -33,7 +33,7 @@ class MediaManagerServer(MediaManager):
 
         t_start = time.time()
         pool = multiprocessing.Pool(processes=self._num_sync_processes)
-        pool.map(partial(_rsync, self._base_path), remote_paths)
+        pool.map(partial(_rsync, [self.get_full_path(f) for f in self.get_filenames()]), remote_paths)
         logger.info('rsync to %d remotes with %d processes took %.3f seconds',
                     len(remote_paths), self._num_sync_processes, time.time() - t_start)
 

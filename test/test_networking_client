@@ -18,8 +18,7 @@ if __name__ == '__main__':
 
     logging.getLogger().setLevel(logging.DEBUG)
 
-    client = NetworkingClient(args.ip, args.server_broadcast_port, args.client_broadcast_port,
-                              args.client_broadcast_interval, args.buffer_size)
+    client = NetworkingClient(args.ip, args.server_broadcast_port, args.client_broadcast_port, args.buffer_size)
 
     try:
         while True:

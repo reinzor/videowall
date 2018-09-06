@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 class NetworkingClient(object):
-    def __init__(self, ip, server_broadcast_port, client_broadcast_port, client_broadcast_interval, buffer_size=1024):
+    def __init__(self, ip, server_broadcast_port, client_broadcast_port, buffer_size=1024):
         validate_ip_port(ip, server_broadcast_port)
         validate_positive_int_argument(client_broadcast_port)
         self._ip = ip
@@ -28,17 +28,9 @@ class NetworkingClient(object):
         self._client_broadcast_socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
         self._client_broadcast_port = client_broadcast_port
 
-        self._close = False
-
-        def send_client_broadcast():
-            while not self._close:
-                msg = ClientBroadcastMessage(ip)
-                logger.debug("Broadcasting client message: %s", msg)
-                self._client_broadcast_socket.sendto(json.dumps(msg.to_dict()), ('<broadcast>', client_broadcast_port))
-                time.sleep(client_broadcast_interval)
-
-        self._client_broadcast_thread = threading.Thread(target=send_client_broadcast)
-        self._client_broadcast_thread.start()
+    def send_client_broadcast(self, msg):
+        logger.debug("Broadcasting client message: %s", msg)
+        self._client_broadcast_socket.sendto(json.dumps(msg.to_dict()), ('<broadcast>', self._client_broadcast_port))
 
     def receive_server_broadcast(self):
         logger.debug("waiting for server broadcast message ...")
@@ -59,5 +51,3 @@ class NetworkingClient(object):
 
     def close(self):
         logger.debug("Closing NetworkingClient ...")
-        self._close = True
-        self._client_broadcast_thread.join()

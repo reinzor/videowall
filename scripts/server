@@ -36,6 +36,11 @@ if __name__ == '__main__':
 
     filenames = collections.deque(server.get_media_filenames())
 
+    # Wait 2 seconds so we can obtain a client list (clients broadcast every second)
+    time.sleep(2)
+
+    logging.info("Client list: %s", server.get_clients())
+
     while True:
         try:
             filename = filenames[0]
@@ -48,7 +53,6 @@ if __name__ == '__main__':
                 while server.is_playing():
                     progress_bar.update(server.get_position_seconds() - progress_bar.n)
                     time.sleep(1. / args.spin_rate)
-                    logging.debug("Clients: %s", server.get_clients())
 
             filenames.rotate()
         except KeyboardInterrupt:

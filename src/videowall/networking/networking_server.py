@@ -36,7 +36,7 @@ class NetworkingServer(object):
                     try:
                         msg = ClientBroadcastMessage(**json.loads(data))
                     except Exception as e:
-                        raise NetworkingException(e)
+                        logging.error("Received invalid ClientBroadcastMessage %s : error: %s", data, e)
                     else:
                         logger.debug("Client broadcast received: %s", msg)
                         self._clients[msg.ip] = {

@@ -61,5 +61,7 @@ class ServerBroadcastMessage(Message):
 
 
 class ClientBroadcastMessage(Message):
-    def __init__(self, ip):
+    def __init__(self, username, ip, media_path):
+        self.username = username
         self.ip = ip
+        self.media_path = media_path

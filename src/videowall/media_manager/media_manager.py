@@ -16,6 +16,9 @@ class MediaManager(object):
         self._base_path = real_base_path
         self._extensions = extensions
 
+    def get_media_path(self):
+        return self._base_path
+
     def get_full_path(self, filename):
         return os.path.join(self._base_path, filename)
 
