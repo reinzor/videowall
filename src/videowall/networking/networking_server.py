@@ -10,7 +10,7 @@ from .networking_exceptions import NetworkingException
 
 logger = logging.getLogger(__name__)
 
-Client = namedtuple('Client', 'username ip media_path age')
+RemoteClient = namedtuple('RemoteClient', 'username ip media_path age')
 
 
 class NetworkingServer(object):
@@ -60,7 +60,7 @@ class NetworkingServer(object):
     def get_clients(self):
         now = time.time()
         print self._clients
-        return [Client(
+        return [RemoteClient(
             c["msg"].username,
             c["msg"].ip,
             c["msg"].media_path,
