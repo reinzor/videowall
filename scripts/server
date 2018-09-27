@@ -7,13 +7,11 @@ import time
 from argparse import ArgumentParser
 
 from tqdm import tqdm
-from videowall.player import get_player_platform_strings, player_platform_from_string
 from videowall.server import Server
 from videowall.util import validate_positive_int_argument, ip_from_ifname
 
 if __name__ == '__main__':
     parser = ArgumentParser()
-    parser.add_argument('platform', choices=get_player_platform_strings())
     parser.add_argument('ifname', choices=os.listdir('/sys/class/net/'))
     parser.add_argument('--media_path', default='~/Videos')
     parser.add_argument('--base_time_offset', type=validate_positive_int_argument, default=5000000000)
@@ -30,9 +28,8 @@ if __name__ == '__main__':
     if args.verbose:
         logging.getLogger().setLevel(logging.DEBUG)
 
-    server = Server(player_platform_from_string(args.platform), args.media_path, args.base_time_offset,
-                    ip_from_ifname(args.ifname), args.server_broadcast_port, args.server_clock_port,
-                    args.client_broadcast_port, args.client_config)
+    server = Server(args.media_path, args.base_time_offset, ip_from_ifname(args.ifname), args.server_broadcast_port,
+                    args.server_clock_port, args.client_broadcast_port, args.client_config)
 
     filenames = collections.deque(server.get_media_filenames())
 

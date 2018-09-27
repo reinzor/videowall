@@ -5,12 +5,11 @@ import time
 from argparse import ArgumentParser
 
 from tqdm import tqdm
-from videowall.player import get_player_platform_strings, player_platform_from_string, PlayerServer
+from videowall.player import PlayerServer
 from videowall.util import validate_positive_int_argument, validate_ip
 
 if __name__ == '__main__':
     parser = ArgumentParser()
-    parser.add_argument('platform', choices=get_player_platform_strings())
     parser.add_argument('filename')
     parser.add_argument('--base_time_offset', type=validate_positive_int_argument, default=5000000000)
     parser.add_argument('--spin_rate', type=validate_positive_int_argument, default=1)
@@ -23,7 +22,7 @@ if __name__ == '__main__':
     if args.verbose:
         logging.getLogger().setLevel(logging.DEBUG)
 
-    player = PlayerServer(player_platform_from_string(args.platform), args.ip, args.port)
+    player = PlayerServer(args.ip, args.port)
 
     player.play(args.filename, args.base_time_offset)
 
