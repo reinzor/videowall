@@ -24,7 +24,7 @@ Video wall with multiple tiles that enables synchronized video playback, mirrore
 
 #### Installation dependencies
 
-Install the `x-window-system` and `gstreamer`:
+Install debian requirements:
 
 ```
 sudo apt-get -y install x-window-system \
@@ -32,7 +32,8 @@ sudo apt-get -y install x-window-system \
                         gstreamer1.0-plugins-good \
                         gstreamer1.0-plugins-bad \
                         gstreamer1.0-plugins-ugly \
-                        gstreamer1.0-omx \
+                        gstreamer1.0-omx \  # rpi
+                        gstreamer1.0-libav \  # pc
                         gir1.2-gst-plugins-base-1.0 \
                         python-gst-1.0 \
                         pulseaudio \
@@ -42,8 +43,15 @@ sudo apt-get -y install x-window-system \
 Make sure `gstreamer is working properly` by downloading and playing an x264 encoded sample video:
 
 ```
-wget https://www.sample-videos.com/video/mp4/720/big_buck_bunny_720p_30mb.mp4 -O ~/big_buck_bunny_720p_30mb.mp4
-gst-launch-1.0 filesrc location=/tmp/big_buck_bunny_720p_30mb.mp4 ! qtdemux ! h264parse ! omxh264dec ! videoconvert ! queue ! ximagesink
+wget https://www.sample-videos.com/video/mp4/720/big_buck_bunny_720p_30mb.mp4 -O $HOME/Videos/big_buck_bunny_720p_30mb.mp4
+gst-launch-1.0 filesrc location=$HOME/Videos/big_buck_bunny_720p_30mb.mp4 ! qtdemux ! h264parse ! omxh264dec ! videoconvert ! queue ! ximagesink # rpi
+gst-launch-1.0 filesrc location=$HOME/Videos/big_buck_bunny_720p_30mb.mp4 ! decodebin ! videoconvert ! queue ! ximagesink # pc
+```
+
+Install pip requirements:
+
+```
+pip install --user -r requirements.txt
 ```
 
 #### Set-up videowall
