@@ -8,14 +8,13 @@ from argparse import ArgumentParser
 
 from tqdm import tqdm
 from videowall.server import Server
-from videowall.util import validate_positive_int_argument, ip_from_ifname, validate_positive_or_zero_int_argument, \
-    validate_positive_float_argument
+from videowall.util import validate_positive_int_argument, ip_from_ifname, validate_positive_float_argument
 
 if __name__ == '__main__':
     parser = ArgumentParser()
     parser.add_argument('ifname', choices=os.listdir('/sys/class/net/'))
     parser.add_argument('--media_path', default='~/Videos')
-    parser.add_argument('--base_time_offset', type=validate_positive_or_zero_int_argument, default=0)
+    parser.add_argument('--base_time_offset', type=validate_positive_float_argument, default=0.1)
     parser.add_argument('--spin_rate', type=validate_positive_int_argument, default=5)
     parser.add_argument('--server_broadcast_port', type=validate_positive_int_argument, default=2000)
     parser.add_argument('--server_play_broadcast_port', type=validate_positive_int_argument, default=2001)
