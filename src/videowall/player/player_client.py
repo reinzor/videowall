@@ -41,7 +41,7 @@ class PlayerClient(object):
             self._clock = GstNet.NetClientClock.new(clock_name, clock_ip, clock_port, 0)
         except TypeError as e:
             raise PlayerException("GstNet.NetClientClock.new({}, {}, {}) failed ({}). Set environment variable "
-                                  "GST_DEBUG=1 for more info".format(clock_name, ip, port, e))
+                                  "GST_DEBUG=1 for more info".format(clock_name, clock_ip, clock_port, e))
         self._pipeline = None
 
         def run_player_thread():
@@ -125,7 +125,7 @@ class PlayerClient(object):
             delta = (base_time_nsecs - self._clock.get_time()) / 1e9
             time.sleep(0.1)
             if time.time() > sync_grace:
-                msg = 'Delta between clock and base_time negative or too large: {} > ONE_MINUTE_SECONDS ({})'\
+                msg = 'Delta between clock and base_time negative or too large: {} > ONE_MINUTE_SECONDS ({})' \
                     .format(delta, ONE_MINUTE_SECONDS)
                 raise PlayerException(msg)
 
