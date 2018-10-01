@@ -1,1 +1,2 @@
 tqdm==4.26.0
+pymediainfo==2.3.0
