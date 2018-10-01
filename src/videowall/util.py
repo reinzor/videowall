@@ -46,6 +46,13 @@ def validate_positive_int_argument(value):
     return ivalue
 
 
+def validate_positive_float_argument(value):
+    fvalue = float(value)
+    if fvalue <= 0:
+        raise argparse.ArgumentTypeError("%s is an invalid positive float value" % value)
+    return fvalue
+
+
 def validate_ip_port(ip, port):
     validate_ip(ip)
     validate_positive_int_argument(port)

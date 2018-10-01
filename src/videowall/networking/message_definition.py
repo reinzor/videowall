@@ -36,13 +36,12 @@ class ClientConfig(Message):
         return ClientConfig(VideocropConfig.get_default().to_dict())
 
 
-class ServerBroadcastMessage(Message):
-    def __init__(self, filename, base_time, ip, clock_port, client_config):
+class ServerPlayBroadcastMessage(Message):
+    def __init__(self, filename, base_time_nsecs, time_overlay, client_config):
         try:
             self.filename = filename
-            self.base_time = int(base_time)
-            self.ip = ip
-            self.clock_port = int(clock_port)
+            self.base_time_nsecs = int(base_time_nsecs)
+            self.time_overlay = time_overlay
 
             if not isinstance(client_config, dict):
                 raise NetworkingException("The client config should be a dictionary")
@@ -56,6 +55,15 @@ class ServerBroadcastMessage(Message):
                 except socket.error as e:
                     raise NetworkingException(e)
                 self.client_config[ip] = ClientConfig(**cfg)
+        except Exception as e:
+            raise NetworkingException(e)
+
+
+class ServerBroadcastMessage(Message):
+    def __init__(self, clock_ip, clock_port):
+        try:
+            self.clock_ip = clock_ip
+            self.clock_port = int(clock_port)
         except Exception as e:
             raise NetworkingException(e)
 

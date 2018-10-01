@@ -5,36 +5,43 @@ import time
 from argparse import ArgumentParser
 
 from tqdm import tqdm
+from videowall.networking.message_definition import VideocropConfig
 from videowall.player import PlayerClient, get_player_platform_strings, player_platform_from_string
-from videowall.util import validate_positive_int_argument, validate_ip
+from videowall.player.player_exceptions import PlayerException
+from videowall.util import validate_positive_int_argument
 
 if __name__ == '__main__':
     parser = ArgumentParser()
     parser.add_argument('platform', choices=get_player_platform_strings())
     parser.add_argument('filename')
     parser.add_argument('base_time', type=validate_positive_int_argument)
-    parser.add_argument('--spin_rate', type=validate_positive_int_argument, default=1)
-    parser.add_argument('--ip', default=validate_ip)
+    parser.add_argument('--spin_rate', type=validate_positive_int_argument, default=100)
+    parser.add_argument('--ip', default='127.0.0.1')
     parser.add_argument('--port', type=validate_positive_int_argument, default=11111)
     parser.add_argument('--verbose', action='store_true')
+    parser.add_argument('--text_overlay', default='')
+    parser.add_argument('--time_overlay', action='store_true')
 
     args = parser.parse_args()
 
     if args.verbose:
         logging.getLogger().setLevel(logging.DEBUG)
 
-    player = PlayerClient(player_platform_from_string(args.platform), "PlayerClient", True, args.ip)
+    player = PlayerClient(player_platform_from_string(args.platform), args.ip, args.port)
 
-    player.play(args.filename, args.base_time, args.ip, args.port)
+    try:
+        player.play(args.filename, args.base_time, VideocropConfig(0, 0, 0, 0), args.text_overlay, args.time_overlay)
+    except PlayerException as e:
+        logging.fatal(e)
+    else:
+        logging.info("Playing file %s with base time %d", args.filename, args.base_time)
 
-    logging.info("Playing file %s with base time %d", args.filename, args.base_time)
+        with tqdm(total=player.get_duration(), bar_format='Playing: {l_bar}{bar} | {n_fmt}/{total_fmt}') as progress_bar:
+            while player.is_playing():
+                progress_bar.update(player.get_position() - progress_bar.n)
+                try:
+                    time.sleep(1. / args.spin_rate)
+                except KeyboardInterrupt:
+                    break
 
-    with tqdm(total=player.get_duration_seconds(),
-              bar_format='Playing: {l_bar}{bar} | {n_fmt}/{total_fmt}') as progress_bar:
-        while player.is_playing():
-            progress_bar.update(player.get_position_seconds() - progress_bar.n)
-            try:
-                time.sleep(1. / args.spin_rate)
-            except KeyboardInterrupt:
-                break
-    player.close()
+        player.close()

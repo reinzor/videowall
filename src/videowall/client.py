@@ -1,9 +1,10 @@
 import getpass
-import json
 import logging
 import socket
 import threading
 import time
+
+from videowall.player.player_exceptions import PlayerException
 
 from .media_manager.media_manager_client import MediaManagerClient
 from .networking import NetworkingClient
@@ -14,10 +15,12 @@ logger = logging.getLogger(__name__)
 
 
 class Client(object):
-    def __init__(self, player_platform, media_path, ip, server_broadcast_port, client_broadcast_port,
-                 client_broadcast_interval):
-        self._networking = NetworkingClient(ip, server_broadcast_port, client_broadcast_port)
-        self._player = PlayerClient(player_platform, True, ip)
+    def __init__(self, player_platform, media_path, ip, server_broadcast_port, server_play_broadcast_port,
+                 client_broadcast_port, client_broadcast_interval):
+        self._networking = NetworkingClient(ip, server_broadcast_port, server_play_broadcast_port,
+                                            client_broadcast_port)
+        self._player_platform = player_platform
+        self._player = None
         self._media_manager = MediaManagerClient(media_path)
 
         self._close = False
@@ -45,15 +48,28 @@ class Client(object):
         return ClientConfig.get_default()
 
     def run(self):
-        while True:
+        while not self._close:
             try:
+                logger.info("Waiting for server broadcast message ...")
                 msg = self._networking.receive_server_broadcast()
             except socket.timeout:
                 pass
             else:
+                self._player = PlayerClient(self._player_platform, msg.clock_ip, msg.clock_port)
+                break
+
+        while not self._close:
+            try:
+                msg = self._networking.receive_server_play_broadcast()
+            except socket.timeout:
+                pass
+            else:
                 client_cfg = Client._get_client_specific_config(self._networking.get_ip(), msg.client_config)
-                self._player.play(self._media_manager.get_full_path(msg.filename), msg.base_time, msg.ip,
-                                  msg.clock_port, client_cfg.videocrop_config)
+                try:
+                    self._player.play(self._media_manager.get_full_path(msg.filename), msg.base_time_nsecs,
+                                      client_cfg.videocrop_config, self._networking.get_ip(), msg.time_overlay)
+                except PlayerException as e:
+                    logger.error(e)
 
     def close(self):
         self._networking.close()

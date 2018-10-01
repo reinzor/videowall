@@ -10,7 +10,8 @@ if __name__ == '__main__':
 
     parser.add_argument('--ip', default='127.0.0.1')
     parser.add_argument('--server_broadcast_port', type=validate_positive_int_argument, default=2000)
-    parser.add_argument('--client_broadcast_port', type=validate_positive_int_argument, default=2001)
+    parser.add_argument('--server_play_broadcast_port', type=validate_positive_int_argument, default=2001)
+    parser.add_argument('--client_broadcast_port', type=validate_positive_int_argument, default=3000)
     parser.add_argument('--client_broadcast_interval', type=validate_positive_int_argument, default=1)
     parser.add_argument('--buffer_size', type=validate_positive_int_argument, default=1024)
 
@@ -20,8 +21,10 @@ if __name__ == '__main__':
 
     client = NetworkingClient(args.ip, args.server_broadcast_port, args.client_broadcast_port, args.buffer_size)
 
+    client.receive_server_broadcast()
+
     try:
         while True:
-            client.receive_server_broadcast()
+            client.receive_server_play_broadcast()
     except KeyboardInterrupt:
         client.close()

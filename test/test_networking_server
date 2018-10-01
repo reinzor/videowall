@@ -4,7 +4,7 @@ import logging
 import time
 from argparse import ArgumentParser
 from videowall.networking import NetworkingServer
-from videowall.networking.message_definition import ServerBroadcastMessage, ClientConfig
+from videowall.networking.message_definition import ServerPlayBroadcastMessage, ClientConfig, ServerBroadcastMessage
 from videowall.util import validate_positive_int_argument
 
 if __name__ == '__main__':
@@ -14,8 +14,9 @@ if __name__ == '__main__':
     parser.add_argument('--ip', default='127.0.0.1')
     parser.add_argument('--clock_port', type=validate_positive_int_argument, default=11111)
     parser.add_argument('--server_broadcast_port', type=validate_positive_int_argument, default=2000)
+    parser.add_argument('--server_play_broadcast_port', type=validate_positive_int_argument, default=2001)
     parser.add_argument('--server_broadcast_interval', type=float, default=1.0)
-    parser.add_argument('--client_broadcast_port', type=validate_positive_int_argument, default=2001)
+    parser.add_argument('--client_broadcast_port', type=validate_positive_int_argument, default=3000)
     parser.add_argument('--client_config', type=json.loads, default='{}')
     parser.add_argument('--buffer_size', type=validate_positive_int_argument, default=1024)
 
@@ -29,13 +30,15 @@ if __name__ == '__main__':
     try:
         while True:
             server.send_broadcast(ServerBroadcastMessage(
+                clock_ip=args.ip,
+                clock_port=args.clock_port
+            ))
+            server.send_play_broadcast(ServerPlayBroadcastMessage(
                 filename=args.filename,
-                base_time=int(time.time() / 1e-9),
-                ip=args.ip,
-                clock_port=args.clock_port,
+                base_time_nsecs=int(time.time() / 1e-9),
+                time_overlay=True,
                 client_config={ip: ClientConfig(**cfg) for ip, cfg in args.client_config.iteritems()}
             ))
             time.sleep(args.server_broadcast_interval)
     except KeyboardInterrupt:
-        print "dsa"
         server.close()
