@@ -1,0 +1,33 @@
+#!/usr/bin/env python
+import argparse
+import logging
+import os
+
+from videowall.util import validate_positive_int_argument, validate_positive_float_argument, ip_from_ifname
+from videowall.web_server import WebServer
+
+if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser(description="Videowall web server")
+    parser.add_argument('ifname', choices=os.listdir('/sys/class/net/'))
+    parser.add_argument('--media_path', default='~/Videos')
+    parser.add_argument('--base_time_offset', type=validate_positive_float_argument, default=0.1)
+    parser.add_argument('--server_web_port', type=validate_positive_int_argument, default=3000)
+    parser.add_argument('--server_broadcast_port', type=validate_positive_int_argument, default=2000)
+    parser.add_argument('--server_play_broadcast_port', type=validate_positive_int_argument, default=2001)
+    parser.add_argument('--server_clock_port', type=validate_positive_int_argument, default=11111)
+    parser.add_argument('--server_broadcast_interval', type=validate_positive_float_argument, default=0.2)
+    parser.add_argument('--server_init_time', type=validate_positive_float_argument, default=0.5)
+    parser.add_argument('--client_broadcast_port', type=validate_positive_int_argument, default=3000)
+    parser.add_argument('--client_time_overlay', action='store_true')
+
+    parser.add_argument('--verbose', action='store_true')
+    args = parser.parse_args()
+
+    if args.verbose:
+        logging.getLogger().setLevel(logging.DEBUG)
+
+    web_server = WebServer(args.server_web_port, args.media_path, args.base_time_offset, ip_from_ifname(args.ifname),
+                           args.server_broadcast_port, args.server_play_broadcast_port, args.server_clock_port,
+                           args.server_broadcast_interval, args.client_broadcast_port)
+    web_server.run()

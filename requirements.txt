@@ -1,2 +1,5 @@
 tqdm==4.26.0
 pymediainfo==2.3.0
+Flask-SocketIO==3.0.2
+eventlet==0.24.1
+
