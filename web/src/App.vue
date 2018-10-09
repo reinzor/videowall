@@ -1,17 +1,16 @@
 <template>
   <div id="app">
-    <img alt="Vue logo" src="./assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js App"/>
+    <ScreenGrid />
   </div>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
+import ScreenGrid from './components/ScreenGrid.vue'
 
 export default {
   name: 'app',
   components: {
-    HelloWorld
+    ScreenGrid
   },
   mounted () {
     this.$socket.emit('test', {
