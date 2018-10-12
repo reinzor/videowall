@@ -34,10 +34,12 @@
                    :i="screen.i">
           <b-card :footer="`${screen.x},${screen.y} [${screen.w}x${screen.h}]`">
             <div slot="header">
-              <b-button-toolbar class="float-sm-right" v-if="editState.active">
+              <span v-text="`Screen ${screen.i}`" />
+              <b-button-toolbar class="float-sm-right">
                 <b-button-group class="mx-1" size="sm">
-                  <b-button variant="outline-secondary"><v-icon name="edit" /></b-button>
-                  <b-button variant="outline-secondary" @click="removeScreen(screen.i)"><v-icon name="times" /></b-button>
+                  <b-button variant="outline-secondary"><v-icon name="plug" /></b-button>
+                  <b-button variant="outline-secondary" v-if="editState.active"><v-icon name="edit" /></b-button>
+                  <b-button variant="outline-secondary" @click="removeScreen(screen.i)" v-if="editState.active"><v-icon name="times" /></b-button>
                 </b-button-group>
               </b-button-toolbar>
             </div>
@@ -108,15 +110,37 @@ export default {
     padding: 0;
   }
   #screenGridLayout {
-    background-color: rgb(255, 245, 245);
+    background-image: url("../assets/bigbunny.jpg");
+    background-repeat: repeat-y;
   }
   .screen .card {
     background: none;
     height: 100%;
+    border: 1px solid rgba(255, 255, 255, 0.8)
+  }
+  .screen .card-header {
+    background-color: rgba(255, 255, 255, 0.5);
+    font-size: 10px;
+    color: grey;
+    padding: 0;
+  }
+  .screen .card-header div {
+    padding: 0px !important;
+    margin: 0px !important;
+  }
+  .screen .card-header button {
+    padding: 0 5px;
+  }
+  .screen .card-header span {
+    margin: 3px;
+    line-height: 23px;
+  }
+  .screen .card-footer {
+    background-color: rgba(255, 255, 255, 0.5);
   }
   .screen .card-footer {
     font-size: 10px;
     color: grey;
-    padding: 2px !important;
+    padding: 4px 3px;
   }
 </style>
