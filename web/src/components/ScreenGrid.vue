@@ -1,7 +1,6 @@
 <template>
   <b-card id="screenGrid" class="mx-auto"
-          :style="{width: `${screenGrid.w}px`}"
-          :footer="`${screenGrid.w}x${screenGrid.h}`">
+          :style="{width: `${screenGrid.w}px`}">
     <div slot="header">
       <b-button-toolbar class="float-sm-right" size="sm" >
         <b-button-group v-if="editState.active" class="mx-1">
@@ -47,14 +46,21 @@
         </grid-item>
       </grid-layout>
     </div>
+    <div slot="footer">
+      <PlayerBar />
+    </div>
   </b-card>
 </template>
 
 <script>
 import VueGridLayout from 'vue-grid-layout';
+import PlayerBar from './PlayerBar.vue';
 
 export default {
   name: 'ScreenGrid',
+  components: {
+    PlayerBar
+  },
   data () {
     return {
       editState: {
