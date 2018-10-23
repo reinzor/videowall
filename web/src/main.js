@@ -15,6 +15,8 @@ Vue.component('v-icon', Icon)
 import VueSocketio from 'vue-socket.io';
 Vue.use(VueSocketio, 'http://localhost:3000');
 
+import "./filters"
+
 import App from './App.vue'
 import Player from './components/Player.vue'
 

@@ -24,6 +24,7 @@
                    :autoSize="true"
                    :useCssTransforms="true">
         <grid-item v-for="screen in screens"
+                   :key="screen.i"
                    class="screen"
                    :style="{cursor: editState.active ? 'grabbing' : 'default'}"
                    :x="screen.x"
@@ -59,7 +60,8 @@ import PlayerBar from './PlayerBar.vue';
 export default {
   name: 'ScreenGrid',
   components: {
-    PlayerBar
+    PlayerBar,
+    VueGridLayout
   },
   data () {
     return {
@@ -114,6 +116,9 @@ export default {
 <style>
   #screenGrid > .card-body {
     padding: 0;
+  }
+  #screenGrid > .card-footer {
+    padding: 5px;
   }
   #screenGridLayout {
     background-image: url("../assets/bigbunny.jpg");
