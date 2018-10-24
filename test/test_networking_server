@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import json
 import logging
 import time
@@ -37,7 +37,7 @@ if __name__ == '__main__':
                 filename=args.filename,
                 base_time_nsecs=int(time.time() / 1e-9),
                 time_overlay=True,
-                client_config={ip: ClientConfig(**cfg) for ip, cfg in args.client_config.iteritems()}
+                client_config={ip: ClientConfig(**cfg) for ip, cfg in args.client_config.items()}
             ))
             time.sleep(args.server_broadcast_interval)
     except KeyboardInterrupt:

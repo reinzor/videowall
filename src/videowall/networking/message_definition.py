@@ -47,7 +47,7 @@ class ServerPlayBroadcastMessage(Message):
                 raise NetworkingException("The client config should be a dictionary")
 
             self.client_config = {}
-            for ip, cfg in client_config.iteritems():
+            for ip, cfg in client_config.items():
                 if not isinstance(cfg, dict):
                     raise NetworkingException("Client config entry should be of dictionary")
                 try:

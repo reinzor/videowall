@@ -1,12 +1,10 @@
 import json
 import logging
 import socket
-import threading
-import time
 
 from videowall.util import validate_ip_port, validate_positive_int_argument
 
-from .message_definition import ServerPlayBroadcastMessage, ClientBroadcastMessage, ServerBroadcastMessage
+from .message_definition import ServerPlayBroadcastMessage, ServerBroadcastMessage
 from .networking_exceptions import NetworkingException
 
 logger = logging.getLogger(__name__)
@@ -34,7 +32,8 @@ class NetworkingClient(object):
 
     def send_client_broadcast(self, msg):
         logger.debug("Broadcasting client message: %s", msg)
-        self._client_broadcast_socket.sendto(json.dumps(msg.to_dict()), ('<broadcast>', self._client_broadcast_port))
+        self._client_broadcast_socket.sendto(json.dumps(msg.to_dict()).encode('utf-8'),
+                                             ('<broadcast>', self._client_broadcast_port))
 
     def receive_server_broadcast(self):
         logger.debug("waiting for server broadcast message ...")
@@ -43,7 +42,7 @@ class NetworkingClient(object):
         data, _ = self._server_broadcast_socket.recvfrom(self._buffer_size)
 
         try:
-            msg = ServerBroadcastMessage(**json.loads(data))
+            msg = ServerBroadcastMessage(**json.loads(data.decode("utf-8")))
         except Exception as e:
             raise NetworkingException(e)
         else:
@@ -57,7 +56,7 @@ class NetworkingClient(object):
         data, _ = self._server_play_broadcast_socket.recvfrom(self._buffer_size)
 
         try:
-            msg = ServerPlayBroadcastMessage(**json.loads(data))
+            msg = ServerPlayBroadcastMessage(**json.loads(data.decode("utf-8")))
         except Exception as e:
             raise NetworkingException(e)
         else:

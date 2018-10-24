@@ -2,4 +2,6 @@ tqdm==4.26.0
 pymediainfo==2.3.0
 Flask-SocketIO==3.0.2
 eventlet==0.24.1
+colorlog==3.1.4
+netifaces==0.10.7
 

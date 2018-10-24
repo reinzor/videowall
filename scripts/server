@@ -1,18 +1,17 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import collections
 import json
 import logging
-import os
 import time
 from argparse import ArgumentParser
 
 from tqdm import tqdm
 from videowall.server import Server
-from videowall.util import validate_positive_int_argument, ip_from_ifname, validate_positive_float_argument
+from videowall.util import validate_positive_int_argument, ip_from_ifname, validate_positive_float_argument, get_ifnames
 
 if __name__ == '__main__':
     parser = ArgumentParser()
-    parser.add_argument('ifname', choices=os.listdir('/sys/class/net/'))
+    parser.add_argument('ifname', choices=get_ifnames())
     parser.add_argument('--media_path', default='~/Videos')
     parser.add_argument('--base_time_offset', type=validate_positive_float_argument, default=0.1)
     parser.add_argument('--spin_rate', type=validate_positive_int_argument, default=5)

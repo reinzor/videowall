@@ -42,7 +42,7 @@ class Server(object):
             filename=filename,
             base_time_nsecs=self._player.get_base_time_nsecs(),
             time_overlay=time_overlay,
-            client_config={ip: cfg for ip, cfg in self._client_config_dict.iteritems()}
+            client_config={ip: cfg for ip, cfg in self._client_config_dict.items()}
         ))
 
     def is_playing(self):

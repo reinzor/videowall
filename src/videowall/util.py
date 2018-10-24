@@ -1,7 +1,6 @@
 import argparse
 import socket
-import fcntl
-import struct
+import netifaces as ni
 
 
 def to_dict(obj):
@@ -66,10 +65,8 @@ def validate_positive_or_zero_int_argument(value):
     return ivalue
 
 
+def get_ifnames():
+    return ni.interfaces()
+
 def ip_from_ifname(ifname):
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    return socket.inet_ntoa(fcntl.ioctl(
-        s.fileno(),
-        0x8915,  # SIOCGIFADDR
-        struct.pack('256s', ifname[:15])
-    )[20:24])
+    return ni.ifaddresses(ifname)[ni.AF_INET][0]['addr']

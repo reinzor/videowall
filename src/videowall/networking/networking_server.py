@@ -41,7 +41,7 @@ class NetworkingServer(object):
                     pass
                 else:
                     try:
-                        msg = ClientBroadcastMessage(**json.loads(data))
+                        msg = ClientBroadcastMessage(**json.loads(data.decode("utf-8")))
                     except Exception as e:
                         logging.error("Received invalid ClientBroadcastMessage %s : error: %s", data, e)
                     else:
@@ -59,7 +59,7 @@ class NetworkingServer(object):
             raise NetworkingException("msg ({}) is not of type ServerPlayBroadcastMessage".format(msg))
 
         logger.debug("Sending %s", msg)
-        self._server_broadcast_socket.sendto(json.dumps(msg.to_dict()),
+        self._server_broadcast_socket.sendto(json.dumps(msg.to_dict()).encode('utf-8'),
                                              ('<broadcast>', self._server_play_broadcast_port))
 
     def send_broadcast(self, msg):
@@ -67,7 +67,7 @@ class NetworkingServer(object):
             raise NetworkingException("msg ({}) is not of type ServerBroadcastMessage".format(msg))
 
         logger.debug("Sending %s", msg)
-        self._server_broadcast_socket.sendto(json.dumps(msg.to_dict()),
+        self._server_broadcast_socket.sendto(json.dumps(msg.to_dict()).encode('utf-8'),
                                              ('<broadcast>', self._server_broadcast_port))
 
     def get_clients(self):
