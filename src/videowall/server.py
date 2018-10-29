@@ -1,13 +1,17 @@
 import logging
+import socket
 import threading
 import time
+from collections import namedtuple
 
+from .media_manager import MediaManagerServer
 from .networking import NetworkingServer
 from .networking.message_definition import ServerPlayBroadcastMessage, ServerBroadcastMessage
-from .media_manager import MediaManagerServer
 from .player import PlayerServer
 
 logger = logging.getLogger(__name__)
+
+RemoteClient = namedtuple('RemoteClient', 'username ip media_path age')
 
 
 class Server(object):
@@ -25,6 +29,10 @@ class Server(object):
         self._server_broadcast_thread = threading.Thread(target=self.send_server_broadcast)
         self._server_broadcast_thread.start()
 
+        self._receive_client_broadcast_thread = threading.Thread(target=self.receive_client_broadcast)
+        self._receive_client_broadcast_thread.start()
+        self._clients = {}
+
     def send_server_broadcast(self):
         while not self._close:
             self._networking.send_broadcast(ServerBroadcastMessage(
@@ -32,6 +40,21 @@ class Server(object):
                 clock_port=self._player.get_port()
             ))
             time.sleep(self._server_broadcast_interval)
+
+    def receive_client_broadcast(self):
+        while not self._close:
+            logger.debug("waiting for client broadcast message ...")
+            try:
+                msg = self._networking.receive_client_broadcast()
+            except socket.timeout:
+                pass
+            except Exception as e:
+                logger.error(e)
+            else:
+                self._clients[msg.ip] = {
+                    "time": time.time(),
+                    "msg": msg
+                }
 
     def get_media_filenames(self):
         return self._media_manager.get_filenames()
@@ -60,7 +83,13 @@ class Server(object):
         return self._player.get_position()
 
     def get_clients(self):
-        return self._networking.get_clients()
+        now = time.time()
+        return [RemoteClient(
+            c["msg"].username,
+            c["msg"].ip,
+            c["msg"].media_path,
+            now - c["time"]
+        ) for c in self._clients.values()]
 
     def sync_media(self, remote_paths):
         self._media_manager.sync(remote_paths)
