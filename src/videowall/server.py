@@ -28,7 +28,7 @@ class Server(object):
                                                                        server_broadcast_interval * 1e3)
         self._server_broadcast_timer.start()
 
-        self._receive_client_broadcast_timer = tornado.ioloop.PeriodicCallback(self._receive_client_broadcast, 1)
+        self._receive_client_broadcast_timer = tornado.ioloop.PeriodicCallback(self._receive_client_broadcast, 10)
         self._receive_client_broadcast_timer.start()
 
         self._clients = {}
