@@ -18,7 +18,7 @@ class NetworkingServer(object):
         self._client_broadcast_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # UDP
         self._client_broadcast_socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
         self._client_broadcast_socket.bind(("", client_broadcast_port))  # Bind to all
-        self._client_broadcast_socket.settimeout(5.0)
+        self._client_broadcast_socket.settimeout(1e-4)
 
         self._server_play_broadcast_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
         self._server_play_broadcast_socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
@@ -51,6 +51,3 @@ class NetworkingServer(object):
         else:
             logger.debug("Client broadcast received: %s", msg)
             return msg
-
-    def close(self):
-        pass
