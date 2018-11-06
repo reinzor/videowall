@@ -16,7 +16,7 @@ if __name__ == '__main__':
     parser.add_argument('--server_broadcast_port', type=validate_positive_int_argument, default=2000)
     parser.add_argument('--server_play_broadcast_port', type=validate_positive_int_argument, default=2001)
     parser.add_argument('--client_broadcast_port', type=validate_positive_int_argument, default=3000)
-    parser.add_argument('--client_broadcast_interval', type=validate_positive_float_argument, default=0.2)
+    parser.add_argument('--client_broadcast_interval', type=validate_positive_float_argument, default=1.)
 
     args = parser.parse_args()
 
