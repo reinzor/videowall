@@ -1,6 +1,8 @@
 import argparse
-import socket
 import netifaces as ni
+import os
+import re
+import socket
 
 
 def to_dict(obj):
@@ -68,5 +70,18 @@ def validate_positive_or_zero_int_argument(value):
 def get_ifnames():
     return ni.interfaces()
 
+
 def ip_from_ifname(ifname):
     return ni.ifaddresses(ifname)[ni.AF_INET][0]['addr']
+
+
+def get_unique_filename(path):
+    i = 0
+    while os.path.exists(path):
+        name, ext = os.path.splitext(path)
+        s = re.search('(.*)_(\d+)', name)
+        if s:
+            name = s.group(1)
+            i = int(s.group(2)) + 1
+        path = "{}_{}{}".format(name, i, ext)
+    return path

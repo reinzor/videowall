@@ -87,3 +87,6 @@ class Server(object):
 
     def sync_media(self, remote_paths):
         self._media_manager.sync(remote_paths)
+
+    def get_media_path(self):
+        return self._media_manager.get_media_path()

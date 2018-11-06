@@ -75,10 +75,9 @@
         },
         ],
         dropzoneOptions: {
-          url: 'https://httpbin.org/post',
+          url: '/upload',
           thumbnailWidth: 200,
-          maxFilesize: 500,
-          headers: { "My-Awesome-Header": "header value" }
+          maxFilesize: 500
         }
       }
     },
