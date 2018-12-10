@@ -78,15 +78,25 @@ class Server(object):
 
     def get_clients(self):
         now = time.time()
-        return [RemoteClient(
-            c["msg"].username,
-            c["msg"].ip,
-            c["msg"].media_path,
-            now - c["time"]
-        ) for c in self._clients.values()]
+        return [{
+            "username": c["msg"].username,
+            "ip": c["msg"].ip,
+            "media_path": c["msg"].media_path,
+            "age": now - c["time"]
+        } for c in self._clients.values()]
 
     def sync_media(self, remote_paths):
         self._media_manager.sync(remote_paths)
 
     def get_media_path(self):
         return self._media_manager.get_media_path()
+
+    def get_state_dict(self):
+        return {
+            "media_path": self.get_media_path(),
+            "media_filenames": self.get_media_filenames(),
+            "is_playing": self.is_playing(),
+            "duration": self.get_duration(),
+            "position": self.get_position(),
+            "clients": self.get_clients()
+        }

@@ -44,3 +44,9 @@ class MediaManagerServer(MediaManager):
             remote_paths = [remote_path]
 
         self._sync_many(remote_paths)
+
+    def add_file(self, path):
+        pass
+
+    def remove_file(self, name):
+        pass

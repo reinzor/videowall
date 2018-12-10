@@ -79,7 +79,7 @@ def get_unique_filename(path):
     i = 0
     while os.path.exists(path):
         name, ext = os.path.splitext(path)
-        s = re.search('(.*)_(\d+)', name)
+        s = re.search('(.*)_(\d+)\.', name)
         if s:
             name = s.group(1)
             i = int(s.group(2)) + 1

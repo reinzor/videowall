@@ -1,1 +1,2 @@
 from .media_manager_server import MediaManagerServer
+from .media_manager_client import MediaManagerClient

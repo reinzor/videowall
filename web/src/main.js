@@ -12,8 +12,11 @@ import Icon from 'vue-awesome/components/Icon'
 import 'vue-awesome/icons'
 Vue.component('v-icon', Icon)
 
-import VueSocketio from 'vue-socket.io';
-Vue.use(VueSocketio, 'http://localhost:3000');
+import VueNativeSock from 'vue-native-websocket'
+Vue.use(VueNativeSock, "ws://" + location.host + "/ws", {
+  format: 'json',
+  reconnection: true
+})
 
 import "./filters"
 
@@ -23,7 +26,7 @@ import Player from './components/Player.vue'
 Vue.config.productionTip = false
 
 const routes = [
-  { path: '/', component: Player }	
+  { path: '/', component: Player }
 ]
 
 const router = new VueRouter({

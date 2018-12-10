@@ -1,6 +1,6 @@
 <template>
   <div id="videoWall">
-    <ScreenGrid />
+    <ScreenGrid :playerState="playerState" />
   </div>
 </template>
 
@@ -11,6 +11,23 @@ export default {
   name: 'Player',
   components: {
     ScreenGrid
+  },
+  created () {
+    this.$options.sockets.onmessage = (data) => this.messageReceived(data)
+    this.$options.sockets.onopen = (data) => this.newConnection(data)
+  },
+  data () {
+    return {
+      playerState: {}
+    }
+  },
+  methods: {
+    newConnection (data) {
+      console.log(data)
+    },
+    messageReceived (data) {
+      this.playerState = JSON.parse(data.data)
+    }
   }
 }
 </script>

@@ -6,7 +6,7 @@ import time
 
 from videowall.player.player_exceptions import PlayerException
 
-from .media_manager.media_manager_client import MediaManagerClient
+from .media_manager import MediaManagerClient
 from .networking import NetworkingClient
 from .networking.message_definition import ClientConfig, ClientBroadcastMessage
 from .player import PlayerClient

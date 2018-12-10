@@ -1,15 +1,14 @@
 #!/usr/bin/env python3
-
+import argparse
 import logging
 import time
-from argparse import ArgumentParser
 
 from tqdm import tqdm
 from videowall.player import PlayerServer
 from videowall.util import validate_positive_int_argument, validate_ip
 
 if __name__ == '__main__':
-    parser = ArgumentParser()
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('filename')
     parser.add_argument('--base_time_offset', type=validate_positive_int_argument, default=10)
     parser.add_argument('--spin_rate', type=validate_positive_int_argument, default=100)

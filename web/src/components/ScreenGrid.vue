@@ -48,7 +48,7 @@
       </grid-layout>
     </div>
     <div slot="footer">
-      <PlayerBar />
+      <PlayerBar :playerState="playerState" />
     </div>
   </b-card>
 </template>
@@ -62,6 +62,12 @@ export default {
   components: {
     PlayerBar,
     VueGridLayout
+  },
+  props: {
+    playerState: {
+      type: Object,
+      required: true
+    }
   },
   data () {
     return {

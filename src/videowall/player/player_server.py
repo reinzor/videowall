@@ -1,4 +1,5 @@
 import logging
+import os
 import time
 
 from pymediainfo import MediaInfo
@@ -17,8 +18,8 @@ class PlayerServer(object):
         self._ip = ip
         self._port = port
         self._base_time_nsecs = None
-        self._duration = None
-        self._start = None
+        self._duration = 0
+        self._start = 0
 
         self._clock = Gst.SystemClock.obtain()
         self._clock_provider = GstNet.NetTimeProvider.new(self._clock, None, self._port)
@@ -27,6 +28,9 @@ class PlayerServer(object):
 
     @staticmethod
     def _get_video_duration_from_file(filename):
+        if not os.path.exists(filename):
+            raise PlayerException("{} does not exist!".format(filename))
+
         info = MediaInfo.parse(filename)
 
         for track in info.tracks:
@@ -57,7 +61,7 @@ class PlayerServer(object):
         return self._base_time_nsecs
 
     def get_position(self):
-        return round(min(max(0, time.time() - self._start), self._duration), 2)
+        return round(min(max(0.0, time.time() - self._start), self._duration), 2)
 
     def get_duration(self):
         return self._duration
