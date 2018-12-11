@@ -64,6 +64,7 @@ class Client(object):
             except socket.timeout:
                 pass
             else:
+                logger.info("Received play request: %s", msg)
                 client_cfg = Client._get_client_specific_config(self._networking.get_ip(), msg.client_config)
                 try:
                     self._player.play(self._media_manager.get_full_path(msg.filename), msg.base_time_nsecs,

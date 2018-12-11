@@ -38,7 +38,8 @@ class PlayerServer(object):
                 video_track = track
                 break
         else:
-            raise Exception()
+            raise PlayerException("Video does not contain a video track")
+
         return round(video_track.duration / 1e3, 2)
 
     def play(self, filename, base_time_offset):

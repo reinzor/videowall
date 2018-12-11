@@ -1,9 +1,11 @@
 <template>
   <div id="playerBar">
-    <PlaylistModal />
+    <PlaylistModal :playerState="playerState" @play="$emit('play', $event)" />
     <b-button-group>
       <b-button variant="outline-secondary"><v-icon name="backward" /></b-button>
-      <b-button variant="outline-secondary" v-on:click="play"><v-icon name="play" /></b-button>
+      <b-button variant="outline-secondary" v-on:click="$emit('play', playerState.current_media_filename)" :disabled="!playerState.current_media_filename">
+        <v-icon name="sync-alt" />
+      </b-button>
       <b-button variant="outline-secondary"><v-icon name="forward" /></b-button>
     </b-button-group>
     <div class="playerTime">
@@ -11,14 +13,14 @@
     </div>
     <div id="playerProgress">
       <b-progress :max="playerState.duration" variant="info">
-        <b-progress-bar :value="playerState.position" v-text="currentVideo.filename" />
+        <b-progress-bar :value="playerState.position" v-text="playerState.current_media_filename" />
       </b-progress>
     </div>
     <div class="playerTime">
       <b-form-input type="text" :placeholder="playerState.duration | hoursMinutesSeconds" disabled />
     </div>
     <b-button-group>
-      <b-button variant="outline-secondary"  v-b-modal.playlistModal><v-icon name="list-ul" /></b-button>
+      <b-button variant="outline-secondary" v-b-modal.playlistModal><v-icon name="list-ul" /></b-button>
     </b-button-group>
   </div>
 </template>
@@ -36,40 +38,24 @@ export default {
       type: Object,
       required: true
     }
-  },
-  data () {
-    return {
-      currentVideo: {
-        filename: 'big_buck_bunny_720p_30mb.mp4',
-        duration: 460,
-        width: 1280,
-        height: 720
-      },
-      position: 30
-    }
-  },
-  methods: {
-    play() {
-      console.log("Sending play command ...")
-      this.$socket.sendObj({
-        command: 'play',
-        arguments: {
-          filename: 'big_buck_bunny_720p_30mb.mp4',
-          time_overlay: true
-        }
-      })
-    }
   }
 }
 </script>
 <style>
+#playerBar {
+  background-color: rgba(0, 0, 0, 0.03);
+  border-left: 1px solid rgba(0, 0, 0, 0.125);
+  border-right: 1px solid rgba(0, 0, 0, 0.125);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+  width: 1280px;
+}
 #playerBar .btn-group {
   margin: 5px;
 }
 
 #playerProgress {
   display: inline-block;
-  width: 884px;
+  width: 882px;
 }
 #playerProgress .progress {
   height: 38px;

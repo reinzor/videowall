@@ -3,6 +3,7 @@
           :style="{width: `${screenGrid.w}px`}">
     <div slot="header">
       <b-button-toolbar class="float-sm-right" size="sm" >
+        <b-button variant="outline-secondary" v-b-modal.clientsModal style="margin-right: 5px"><v-icon name="users" /></b-button>
         <b-button-group v-if="editState.active" class="mx-1">
           <b-button variant="outline-secondary" @click="cancelEdit"><v-icon name="times" /></b-button>
           <b-button variant="outline-secondary" @click="applyEdit"><v-icon name="check" /></b-button>
@@ -11,6 +12,32 @@
       </b-button-toolbar>
     </div>
     <div id="screenGridLayout" v-on:click="screenGridLayoutClicked($event)">
+      <b-modal id="clientsModal" hide-footer title="Clients">
+        <b-list-group>
+          <b-button @click="syncMedia">Sync media</b-button>
+          <b-list-group-item v-for="client in clients" class="flex-column align-items-start" :key="client.ip" :variant="clientActive(client.ip) ? 'success' : 'danger'">
+            <div>
+              <div class="d-flex justify-content-between align-items-center">
+                <table class="clientTable">
+                  <tr><td>IP:</td><td v-text="client.ip"></td></tr>
+                  <tr><td>Username:</td><td v-text="client.username"></td></tr>
+                  <tr><td>Media path:</td><td v-text="client.media_path"></td></tr>
+                </table>
+                <b-badge variant="info">Age: {{client.age}}</b-badge>
+              </div>
+            </div>
+          </b-list-group-item>
+        </b-list-group>
+      </b-modal>
+      <b-modal ref="addModal" hide-footer title="Add screen for client">
+        <div class="d-block text-center">
+          <b-form @submit.prevent="addScreen()">
+            <b-form-select :options="clientIpOptions" required v-model="editState.addScreenIp">
+            </b-form-select>
+            <b-button type="submit" variant="primary">Add screen</b-button>
+          </b-form>
+        </div>
+      </b-modal>
       <grid-layout :style="{height: `${screenGrid.h}px`, cursor: editState.active ? 'cell' : 'default'}"
                    :layout="screens"
                    :colNum="1280"
@@ -37,9 +64,8 @@
               <span v-text="`Screen ${screen.i}`" />
               <b-button-toolbar class="float-sm-right">
                 <b-button-group class="mx-1" size="sm">
-                  <b-button variant="outline-secondary"><v-icon name="plug" /></b-button>
-                  <b-button variant="outline-secondary" v-if="editState.active"><v-icon name="edit" /></b-button>
-                  <b-button variant="outline-secondary" @click="removeScreen(screen.i)" v-if="editState.active"><v-icon name="times" /></b-button>
+                  <b-button :variant="clientActive(screen.i) ? 'success': 'danger'"><v-icon name="plug" /></b-button>
+                  <b-button variant="danger" @click="removeScreen(screen.i)" v-if="editState.active"><v-icon name="trash-alt" /></b-button>
                 </b-button-group>
               </b-button-toolbar>
             </div>
@@ -47,25 +73,24 @@
         </grid-item>
       </grid-layout>
     </div>
-    <div slot="footer">
-      <PlayerBar :playerState="playerState" />
-    </div>
   </b-card>
 </template>
 
 <script>
 import VueGridLayout from 'vue-grid-layout';
-import PlayerBar from './PlayerBar.vue';
 
 export default {
   name: 'ScreenGrid',
   components: {
-    PlayerBar,
     VueGridLayout
   },
   props: {
-    playerState: {
+    clientConfig: {
       type: Object,
+      required: true
+    },
+    clients: {
+      type: Array,
       required: true
     }
   },
@@ -73,38 +98,82 @@ export default {
     return {
       editState: {
         active: false,
-        screensBeforeEdit: null
+        addScreenIp: '',
+        clickedPosition: {
+          x: 0,
+          y: 0
+        }
       },
       screenGrid: {
         w: 1280,
         h: 720
       },
-      screens: [
-        {"x":0,"y":0,"w":200,"h":157,"i":"0"},
-        {"x":2,"y":0,"w":200,"h":157,"i":"1"}
-      ]
+      screens: []
+    }
+  },
+  watch: {
+    clientConfig: function (clientConfig) {
+      if (!this.editState.active) {
+        this.screens = []
+        for (var ip in clientConfig) {
+          this.screens.push({
+            i: ip,
+            x: clientConfig[ip].videocrop_config.left,
+            y: clientConfig[ip].videocrop_config.top,
+            w: 1280 - clientConfig[ip].videocrop_config.left - clientConfig[ip].videocrop_config.right,
+            h: 720 - clientConfig[ip].videocrop_config.top - clientConfig[ip].videocrop_config.bottom
+          })
+        }
+      }
+    }
+  },
+  computed: {
+    clientIpOptions () {
+      var clientIpOptions = []
+      this.clients.forEach((client) => {
+        if (!(client.ip in this.clientConfig)) {
+          clientIpOptions.push(client.ip)
+        }
+      })
+      return clientIpOptions
     }
   },
   methods: {
     edit () {
-      this.editState.screensBeforeEdit = JSON.parse(JSON.stringify(this.screens))
       this.editState.active = true
     },
     cancelEdit () {
-      this.screens = this.editState.screensBeforeEdit
       this.editState.active = false
     },
     applyEdit () {
+      var clientConfig = {}
+      this.screens.forEach((screen) => {
+        clientConfig[screen.i] = {
+          videocrop_config: {
+            bottom: 720 - screen.y - screen.h,
+            left: screen.x,
+            right: 1280 - screen.x - screen.w,
+            top: screen.y
+          }
+        }
+      })
+      this.$socket.sendObj({
+        command: 'set_client_config',
+        arguments: {
+          config: clientConfig
+        }
+      })
       this.editState.active = false
     },
-    addScreen (x, y) {
+    addScreen () {
       this.screens.push({
-        x: x,
-        y: y,
+        x: this.editState.clickedPosition.x,
+        y: this.editState.clickedPosition.y,
         w: 200,
         h: 200,
-        i: this.screens.length
+        i: this.editState.addScreenIp
       })
+      this.$refs.addModal.hide()
     },
     removeScreen (i) {
       this.screens = this.screens.filter((s) => {
@@ -113,8 +182,27 @@ export default {
     },
     screenGridLayoutClicked (e) {
       if (this.editState.active && e.target.getAttribute('class') == 'vue-grid-layout') {
-        this.addScreen(e.offsetX, e.offsetY)
+        this.$refs.addModal.show()
+        this.editState.clickedPosition.x = e.offsetX
+        this.editState.clickedPosition.y = e.offsetY
       }
+    },
+    clientActive (ip) {
+      var active = false
+      this.clients.forEach((client) => {
+        if (client.ip == ip) {
+          if (client.age < 5) {
+            active = true
+          }
+        }
+      })
+      return active
+    },
+    syncMedia () {
+      this.$socket.sendObj({
+        command: 'sync_media',
+        arguments: {}
+      })
     }
   }
 }
@@ -123,7 +211,7 @@ export default {
   #screenGrid > .card-body {
     padding: 0;
   }
-  #screenGrid > .card-footer {
+  #screenGrid > .card-header {
     padding: 5px;
   }
   #screenGridLayout {
@@ -159,5 +247,8 @@ export default {
     font-size: 10px;
     color: grey;
     padding: 4px 3px;
+  }
+  .clientTable {
+    font-size: 10px;
   }
 </style>

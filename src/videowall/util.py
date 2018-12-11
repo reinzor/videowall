@@ -1,8 +1,10 @@
 import argparse
+import base64
 import netifaces as ni
 import os
 import re
 import socket
+import string
 
 
 def to_dict(obj):
@@ -76,6 +78,9 @@ def ip_from_ifname(ifname):
 
 
 def get_unique_filename(path):
+    valid_chars = "-_/.%s%s" % (string.ascii_letters, string.digits)
+    path = ''.join(c for c in path if c in valid_chars).replace(' ', '_')
+
     i = 0
     while os.path.exists(path):
         name, ext = os.path.splitext(path)

@@ -1,29 +1,31 @@
 <template>
   <b-modal id="playlistModal" hide-footer title="Playlist">
     <b-list-group>
-      <draggable v-model="playlist">
-        <b-list-group-item v-for="video in playlist" 
-                           class="flex-column align-items-start"
-                           :key="video.filename"
-                           :variant="video.playing ? 'info' : ''">
-          <div :style="{opacity: video.enabled ? 1.0 : 0.2}">
-            <div class="d-flex w-100 justify-content-between">
-              <h5 class="mb-1" v-text="video.filename"></h5>
-              <b-button-group size="sm" class="playlistVideoButtons">
-                <b-button variant="outline-secondary"><v-icon name="times" /></b-button>
-                <b-button variant="outline-secondary" v-if="video.enabled"><v-icon name="check-square" /></b-button>
-                <b-button variant="outline-secondary" v-if="!video.enabled"><v-icon name="square" /></b-button>
-              </b-button-group>
-            </div>
-            <div class="playlistVideoBadges">
-              <b-badge variant="info">Duration: {{video.duration | hoursMinutesSeconds}}</b-badge>
-              <b-badge variant="secondary">Dimensions: {{video.width}}x{{video.height}}</b-badge>
-            </div>
+      <b-list-group-item v-for="media_filename in playerState.media_filenames"
+                         class="flex-column align-items-start"
+                         :key="media_filename"
+                         :variant="playerState.current_media_filename == media_filename ? 'info' : ''">
+        <div>
+          <div class="d-flex w-100 justify-content-between">
+            <h5 class="mb-1" v-text="media_filename"></h5>
+            <b-button-group size="sm" class="playlistVideoButtons">
+              <b-button variant="outline-secondary" v-on:click="$emit('play', media_filename)">
+                <v-icon name="play" v-if="playerState.current_media_filename != media_filename"/>
+                <v-icon name="sync-alt" v-else/>
+              </b-button>
+              <b-button variant="outline-secondary" v-if="playerState.current_media_filename != media_filename" v-on:click="deleteMedia(media_filename)">
+                <v-icon name="times" />
+              </b-button>
+            </b-button-group>
           </div>
-        </b-list-group-item>
-      </draggable>
+        </div>
+      </b-list-group-item>
     </b-list-group>
-    <vue2-dropzone ref="dropzone" id="dropzone" :options="dropzoneOptions" @vdropzone-complete="uploadComplete($event, $refs.dropzone)"></vue2-dropzone>
+    <b-alert v-if="err" variant="danger" v-text="err" show dismissible />
+    <vue2-dropzone ref="dropzone" id="dropzone" :options="dropzoneOptions"
+                   @vdropzone-file-added="err = ''"
+                   @vdropzone-complete="uploadComplete($refs.dropzone)"
+                   @vdropzone-error="uploadError"></vue2-dropzone>
   </b-modal>
 </template>
 
@@ -38,53 +40,45 @@
       draggable,
       vue2Dropzone
     },
+    props: {
+      playerState: {
+        type: Object,
+        required: true
+      }
+    },
     data () {
       return {
-        playlist: [
-        {
-          filename: 'big_buck_bunny_720p_30mb.mp4',
-          duration: 460,
-          width: 1280,
-          height: 720,
-          enabled: true,
-          playing: false
-        },
-        {
-          filename: 'Friends.mp4',
-          duration: 460,
-          width: 1280,
-          height: 720,
-          enabled: true,
-          playing: true
-        },
-        {
-          filename: 'Banana.mp4',
-          duration: 460,
-          width: 1280,
-          height: 720,
-          enabled: true,
-          playing: false
-        },
-        {
-          filename: 'Hola.mp4',
-          duration: 460,
-          width: 1280,
-          height: 720,
-          enabled: false,
-          playing: false
-        },
-        ],
         dropzoneOptions: {
           url: '/upload',
           thumbnailWidth: 200,
           maxFilesize: 500
-        }
+        },
+        err: ''
       }
     },
     methods: {
-      uploadComplete: debounce((e, dropzone) => {
+      uploadComplete(dropzone) {
         dropzone.removeAllFiles()
-      }, 3000)
+        this.syncMedia()
+      },
+      uploadError(err) {
+        this.err = JSON.parse(err.xhr.response).reason
+      },
+      deleteMedia(filename) {
+        this.$socket.sendObj({
+          command: 'delete',
+          arguments: {
+            filename: filename
+          }
+        })
+        this.syncMedia()
+      },
+      syncMedia () {
+        this.$socket.sendObj({
+          command: 'sync_media',
+          arguments: {}
+        })
+      }
     }
   }
 </script>
@@ -92,7 +86,7 @@
 <style>
 #playlistModal .list-group-item {
   padding: 10px;
-  cursor: move;
+  /*cursor: move;*/
 }
 .playlistVideoButtons {
   margin: 0 !important;
@@ -101,9 +95,6 @@
 .playlistVideoButtons button {
   padding: 0 5px !important;
 }
-.playlistVideoBadges .badge {
-  margin-right: 5px;
-}
 #playlistModal #dropzone {
   padding: 0;
   border: 1px solid rgba(0, 0, 0, 0.125);
@@ -111,7 +102,7 @@
 }
 #playlistModal .dropzone {
   margin-top: 10px;
-  min-height: 0px; 
+  min-height: 0px;
 }
 #playlistModal .dz-message {
   /*margin: 0;*/

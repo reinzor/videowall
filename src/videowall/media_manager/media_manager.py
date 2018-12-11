@@ -16,8 +16,8 @@ class MediaManager(object):
         self._base_path = real_base_path
         self._extensions = extensions
 
-    def _is_valid_extension(self, filename):
-        return "." in filename and filename.split(".")[-1] in self._extensions
+    def _is_valid_filename(self, filename):
+        return "." in filename and filename.split(".")[-1] in self._extensions and " " not in filename
 
     def get_media_path(self):
         return self._base_path
@@ -26,7 +26,14 @@ class MediaManager(object):
         return os.path.join(self._base_path, filename)
 
     def get_filenames(self):
-        return [filename for filename in os.listdir(self._base_path) if self._is_valid_extension(filename)]
+        return [filename for filename in os.listdir(self._base_path) if self._is_valid_filename(filename)]
 
     def get_extensions(self):
         return self._extensions
+
+    def delete_media(self, filename):
+        path = self.get_full_path(filename)
+        if os.path.exists(path):
+            os.remove(path)
+        else:
+            raise MediaManagerException("Media filename {} does not exist!".format(filename))

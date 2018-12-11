@@ -1,15 +1,20 @@
 <template>
   <div id="videoWall">
-    <ScreenGrid :playerState="playerState" />
+    <ScreenGrid :clientConfig="serverState.client_config" :clients="serverState.clients" />
+    <center>
+      <PlayerBar :playerState="serverState.player" @play="play($event)" />
+    </center>
   </div>
 </template>
 
 <script>
+import PlayerBar from './PlayerBar.vue';
 import ScreenGrid from './ScreenGrid.vue'
 
 export default {
   name: 'Player',
   components: {
+    PlayerBar,
     ScreenGrid
   },
   created () {
@@ -18,7 +23,11 @@ export default {
   },
   data () {
     return {
-      playerState: {}
+      serverState: {
+        client_config: {},
+        clients: [],
+        player: {}
+      }
     }
   },
   methods: {
@@ -26,7 +35,15 @@ export default {
       console.log(data)
     },
     messageReceived (data) {
-      this.playerState = JSON.parse(data.data)
+      this.serverState = JSON.parse(data.data)
+    },
+    play(filename) {
+      this.$socket.sendObj({
+        command: 'play',
+        arguments: {
+          filename: filename
+        }
+      })
     }
   }
 }
