@@ -20,16 +20,17 @@ if __name__ == '__main__':
     parser.add_argument('--verbose', action='store_true')
     parser.add_argument('--text_overlay', default='')
     parser.add_argument('--time_overlay', action='store_true')
+    parser.add_argument('--use_local_clock', action='store_true')
 
     args = parser.parse_args()
 
     if args.verbose:
         logging.getLogger().setLevel(logging.DEBUG)
 
-    player = PlayerClient(player_platform_from_string(args.platform), args.ip, args.port)
+    player = PlayerClient(player_platform_from_string(args.platform), args.ip, args.port, args.use_local_clock)
 
     try:
-        player.play(args.filename, args.base_time, VideocropConfig(0, 0, 0, 0), args.text_overlay, args.time_overlay)
+        player.play(args.filename, args.base_time, VideocropConfig(200, 20, 0, 0), args.text_overlay, args.time_overlay)
     except PlayerException as e:
         logging.fatal(e)
     else:

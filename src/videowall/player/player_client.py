@@ -19,7 +19,7 @@ ONE_MINUTE_SECONDS = 60
 class PlayerClient(object):
     Gst.init(None)
 
-    def __init__(self, platform, clock_ip, clock_port):
+    def __init__(self, platform, clock_ip, clock_port, use_local_clock=False):
         if not issubclass(platform, PlayerPlatform):
             raise PlayerException("Invalid player platform {}, available platforms: {}".format(platform,
                                                                                                get_player_platforms()))
@@ -30,18 +30,24 @@ class PlayerClient(object):
         self._window = Gtk.Window(Gtk.WindowType.TOPLEVEL)
         self._window.set_title("PlayerClient")
         self._window.set_default_size(self._screen_width, self._screen_height)
+        self._window.fullscreen()
         self._movie_view = Gtk.DrawingArea()
         self._window.add(self._movie_view)
         self._window.show_all()
 
-        validate_ip_port(clock_ip, clock_port)
+        self._use_local_clock = use_local_clock
 
-        clock_name = "clock0"
-        try:
-            self._clock = GstNet.NetClientClock.new(clock_name, clock_ip, clock_port, 0)
-        except TypeError as e:
-            raise PlayerException("GstNet.NetClientClock.new({}, {}, {}) failed ({}). Set environment variable "
-                                  "GST_DEBUG=1 for more info".format(clock_name, clock_ip, clock_port, e))
+        if not self._use_local_clock:
+            validate_ip_port(clock_ip, clock_port)
+            clock_name = "clock0"
+            try:
+                self._clock = GstNet.NetClientClock.new(clock_name, clock_ip, clock_port, 0)
+            except TypeError as e:
+                raise PlayerException("GstNet.NetClientClock.new({}, {}, {}) failed ({}). Set environment variable "
+                                      "GST_DEBUG=1 for more info".format(clock_name, clock_ip, clock_port, e))
+        else:
+            self._clock = Gst.SystemClock.obtain()
+
         self._pipeline = None
 
         def run_player_thread():
@@ -90,6 +96,7 @@ class PlayerClient(object):
                 launch_cmd += ' ! textoverlay text="{}\n{}"'.format("%s not found" % filename, text_overlay)
             launch_cmd += " ! videoconvert"
 
+        launch_cmd += " ! videoscale add-borders=false ! video/x-raw,width=%d,height=%d" % (self._screen_width, self._screen_height)
         launch_cmd += " ! ximagesink"  # or ! fakesink sync=true # sync required for realtime playback
 
         logger.debug("gst-launch-1.0 -v %s", launch_cmd)
@@ -118,16 +125,19 @@ class PlayerClient(object):
         self._gobject_thread.join()
 
     def play(self, filename, base_time_nsecs, videocrop_config, text_overlay, time_overlay):
-        # Make sure the client clock is in sync with the server
-        sync_grace = time.time() + 5.0
-        delta = (base_time_nsecs - self._clock.get_time()) / 1e9
-        while delta > ONE_MINUTE_SECONDS or delta < 0:
+        if not self._use_local_clock:
+            # Make sure the client clock is in sync with the server
+            sync_grace = time.time() + 5.0
             delta = (base_time_nsecs - self._clock.get_time()) / 1e9
-            time.sleep(0.1)
-            if time.time() > sync_grace:
-                msg = 'Delta between clock and base_time negative or too large: {} > ONE_MINUTE_SECONDS ({})' \
-                    .format(delta, ONE_MINUTE_SECONDS)
-                raise PlayerException(msg)
+            while delta > ONE_MINUTE_SECONDS or delta < 0:
+                delta = (base_time_nsecs - self._clock.get_time()) / 1e9
+                time.sleep(0.1)
+                if time.time() > sync_grace:
+                    msg = 'Delta between clock and base_time negative or too large: {} > ONE_MINUTE_SECONDS ({})' \
+                        .format(delta, ONE_MINUTE_SECONDS)
+                    raise PlayerException(msg)
+        else:
+            base_time_nsecs = self._clock.get_time()
 
         if self._pipeline:
             self._destroy_pipeline()
