@@ -1,10 +1,10 @@
 import argparse
-import base64
-import netifaces as ni
+import fcntl
 import os
 import re
 import socket
 import string
+import struct
 
 
 def to_dict(obj):
@@ -70,11 +70,16 @@ def validate_positive_or_zero_int_argument(value):
 
 
 def get_ifnames():
-    return ni.interfaces()
+    return os.listdir('/sys/class/net/')
 
 
 def ip_from_ifname(ifname):
-    return ni.ifaddresses(ifname)[ni.AF_INET][0]['addr']
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    return socket.inet_ntoa(fcntl.ioctl(
+        s.fileno(),
+        0x8915,  # SIOCGIFADDR
+        struct.pack('256s', ifname[:15])
+    )[20:24])
 
 
 def get_unique_filename(path):

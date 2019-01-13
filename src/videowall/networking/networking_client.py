@@ -55,6 +55,8 @@ class NetworkingClient(object):
         # May raise a socket.timeout exception
         data, _ = self._server_play_broadcast_socket.recvfrom(self._buffer_size)
 
+        print(data)
+
         try:
             msg = ServerPlayBroadcastMessage(**json.loads(data.decode("utf-8")))
         except Exception as e:
