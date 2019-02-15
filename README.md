@@ -14,46 +14,67 @@ Video wall with multiple tiles that enables synchronized video playback, mirrore
 
 ## Installation
 
-### Raspberry PI
+### Software
 
-#### Installation prerequisites
+#### Raspberry PI
+
+##### Installation prerequisites
 
 - Raspbian Stretch Lite
 - Raspberry Pi 3 / Raspberry Pi Zero (other Pi's not tested)
 - Videowall repository is your current working directory
 
-#### Installation
+##### Installation from source
 
-Installs the videowall and enables a client service on startup.
+- Install Raspbian Stretch lite on an sd card of at least 4GB
+- Place an `ssh` document in the `/boot` partition to enable direct ssh access
+- Login to the raspberry pi and start the installation:
 
 ```
+sudo apt-get -y update && \
+sudo apt-get -y install git && \
+git clone https://github.com/reinzor/videowall.git && cd videowall && \
 ./install_raspberry_pi_stretch_lite_autostart.bash
 ```
 
-### Ubuntu x86
+This installs the videowall software and enables a client service on startup.
 
-#### Installation prerequisites
+#### Ubuntu x86
+
+##### Installation prerequisites
 
 - Ubuntu x86 16.04 LTS (other versions not tested)
 - Videowall repository is your current working directory
 
-#### Installation
+##### Installation
 
 ```
 ./install_ubuntu_x86.bash
 ```
 
-## Quick start
+### Hardware
 
-### Server
+#### Raspberry PI
+
+##### Components per client without cables
+
+- [Raspberry PI zero](https://www.adafruit.com/product/2885)
+- [Micro USB 2.0 naar Ethernet 10/100 RJ45 Network Lan Adapter Card](https://nl.banggood.com/Micro-USB-2_0-to-Ethernet-10-or-100-RJ45-Network-Lan-Adapter-Card-p-921585.html)
+- 4GB+ Micro SD card
+
+Cost `~15 USD` per client
+
+### Quick start
+
+#### Server
 
     scripts/server
 
-### Client
+#### Client
 
     scripts/client
 
-This is automaticall started on a raspberry pi after installation. Can be manually started on an ubuntu x86 environment.
+This is automatically started on a raspberry pi after installation. Can be manually started on an ubuntu x86 environment.
 
 ## References
 
@@ -72,3 +93,4 @@ This is automaticall started on a raspberry pi after installation. Can be manual
 - [Remote dbus control](https://stackoverflow.com/questions/10158684/connecting-to-dbus-over-tcp/13275973#13275973)
 - [GST OMX](https://github.com/GStreamer/gst-omx)
 - [GST MMAL](https://github.com/youviewtv/gst-mmal)
+- [Disable Boot text](https://retropie.org.uk/docs/FAQ/#how-do-i-hide-the-boot-text)
