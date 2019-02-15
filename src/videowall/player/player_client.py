@@ -5,7 +5,7 @@ import os.path
 import threading
 import time
 
-from videowall.gi_version import GstNet, Gst, Gdk, Gtk
+from videowall.gi_version import GstNet, Gst, GObject
 from videowall.util import validate_ip_port
 
 from .player_exceptions import PlayerException
@@ -23,18 +23,6 @@ class PlayerClient(object):
         if not issubclass(platform, PlayerPlatform):
             raise PlayerException("Invalid player platform {}, available platforms: {}".format(platform,
                                                                                                get_player_platforms()))
-        # Set-up window
-        screen = Gdk.Screen.get_default()
-        self._screen_width = screen.get_width()
-        self._screen_height = screen.get_height()
-        self._window = Gtk.Window(Gtk.WindowType.TOPLEVEL)
-        self._window.set_title("PlayerClient")
-        self._window.set_default_size(self._screen_width, self._screen_height)
-        self._window.fullscreen()
-        self._movie_view = Gtk.DrawingArea()
-        self._window.add(self._movie_view)
-        self._window.show_all()
-
         self._use_local_clock = use_local_clock
 
         if not self._use_local_clock:
@@ -51,21 +39,17 @@ class PlayerClient(object):
         self._pipeline = None
 
         def run_player_thread():
-            Gtk.main()
+            GObject.MainLoop().run()
 
         self._gobject_thread = threading.Thread(target=run_player_thread)
         self._gobject_thread.start()
 
         self._platform = platform
 
-        logger.info("Player constructed for window (%dx%d) and clock server (%s:%d)", self._screen_width,
-                    self._screen_height, clock_ip, clock_port)
+        logger.info("Player constructed (platform=%s, clock_ip=%s, clock_port=%s, use_local_clock=%s)", platform, clock_ip, clock_port, use_local_clock)
 
     def _construct_pipeline(self, filename, videocrop_config, text_overlay, time_overlay):
         real_path = os.path.realpath(os.path.expanduser(filename))
-
-        if os.environ.get('DISPLAY') is None:
-            raise PlayerException("No $DISPLAY environment variable is set, the ximagesink will not work")
 
         launch_cmd = ""
         if os.path.isfile(real_path):
@@ -96,32 +80,23 @@ class PlayerClient(object):
                 launch_cmd += ' ! textoverlay text="{}\n{}"'.format("%s not found" % filename, text_overlay)
             launch_cmd += " ! videoconvert"
 
-        launch_cmd += " ! videoscale add-borders=false ! video/x-raw,width=%d,height=%d" % (self._screen_width, self._screen_height)
-        launch_cmd += " ! ximagesink"  # or ! fakesink sync=true # sync required for realtime playback
+        if self._platform == PlayerPlatformPC:
+            launch_cmd += " ! ximagesink"  # or ! fakesink sync=true # sync required for realtime playback
+        else:
+            launch_cmd += " ! mmalvideosink"
 
         logger.debug("gst-launch-1.0 -v %s", launch_cmd)
         self._pipeline = Gst.parse_launch(launch_cmd)
-
-        self._pipeline.get_bus().enable_sync_message_emission()
-        self._pipeline.get_bus().add_signal_watch()
-
-        self._pipeline.get_bus().connect('sync-message::element', self._on_bus_sync_msg)
 
     def _destroy_pipeline(self):
         if self._pipeline is not None:
             self._pipeline.set_state(Gst.State.NULL)
             self._pipeline = None
 
-    def _on_bus_sync_msg(self, bus, msg):
-        if msg is not None:
-            sink = msg.src
-            sink.set_property("force-aspect-ratio", True)
-            sink.set_window_handle(self._movie_view.get_property('window').get_xid())
-
     def close(self):
         self.stop()
-        Gtk.main_quit()
-        logger.info("Waiting for the GTK Thread to join ..")
+        GObject.MainLoop().quit()
+        logger.info("Waiting for the GObject Thread to join ..")
         self._gobject_thread.join()
 
     def play(self, filename, base_time_nsecs, videocrop_config, text_overlay, time_overlay):
