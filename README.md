@@ -70,3 +70,5 @@ This is automaticall started on a raspberry pi after installation. Can be manual
 - [dbus omxplayer](https://github.com/popcornmix/omxplayer)
 - [GPU memory 90 degrees omxplayer](https://github.com/popcornmix/omxplayer/issues/467)
 - [Remote dbus control](https://stackoverflow.com/questions/10158684/connecting-to-dbus-over-tcp/13275973#13275973)
+- [GST OMX](https://github.com/GStreamer/gst-omx)
+- [GST MMAL](https://github.com/youviewtv/gst-mmal)
