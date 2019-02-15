@@ -39,9 +39,10 @@ echo "source $SCRIPT_DIR/setup.bash" >> ~/.bashrc
 sudo rm /etc/network/mac
 sudo cp -r $SCRIPT_DIR/cfg/rpi/* /
 
-# Enable startup run
+# Enable startup run and disable dhcpcd
 sudo systemctl daemon-reload
 sudo systemctl enable videowall
+sudo systemctl disable dhcpcd
 
 # Show installation done message
 echo "======="
