@@ -2,7 +2,7 @@
 
 if [ ! -f /etc/network/mac ]; then
   mac=`echo -n 00:60:2F; dd bs=1 count=3 if=/dev/random 2>/dev/null |hexdump -v -e '/1 ":%02X"'`
-  
+
   echo -e " auto lo\n"\
          "iface lo inet loopback\n"\
          "\n"\

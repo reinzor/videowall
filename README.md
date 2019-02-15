@@ -14,74 +14,33 @@ Video wall with multiple tiles that enables synchronized video playback, mirrore
 
 ## Installation
 
-### Raspberry PI installation
+### Raspberry PI
 
 #### Installation prerequisites
 
-- Raspbian Jessie
+- Raspbian Stretch Lite
 - Raspberry Pi 3 / Raspberry Pi Zero (other Pi's not tested)
 - Videowall repository is your current working directory
 
-#### Installation dependencies
+#### Installation
 
-Install debian requirements:
-
-```
-sudo apt-get -y install x-window-system \
-                        gstreamer1.0-tools \
-                        gstreamer1.0-plugins-good \
-                        gstreamer1.0-plugins-bad \
-                        gstreamer1.0-plugins-ugly \
-                        gstreamer1.0-omx \  # rpi
-                        gstreamer1.0-libav \  # pc
-                        gir1.2-gst-plugins-base-1.0 \
-                        python-gst-1.0 \
-                        pulseaudio \
-                        python-colorlog
-```
-
-Make sure `gstreamer is working properly` by downloading and playing an x264 encoded sample video:
+Installs the videowall and enables a client service on startup.
 
 ```
-wget https://www.sample-videos.com/video/mp4/720/big_buck_bunny_720p_30mb.mp4 -O $HOME/Videos/big_buck_bunny_720p_30mb.mp4
-gst-launch-1.0 filesrc location=$HOME/Videos/big_buck_bunny_720p_30mb.mp4 ! qtdemux ! h264parse ! omxh264dec ! videoconvert ! queue ! ximagesink # rpi
-gst-launch-1.0 filesrc location=$HOME/Videos/big_buck_bunny_720p_30mb.mp4 ! decodebin ! videoconvert ! queue ! ximagesink # pc
+./install_raspberry_pi_stretch_lite_autostart.bash
 ```
 
-Install pip requirements:
+### Ubuntu x86
+
+#### Installation prerequisites
+
+- Ubuntu x86 16.04 LTS (other versions not tested)
+- Videowall repository is your current working directory
+
+#### Installation
 
 ```
-pip install --user -r requirements.txt
-```
-
-#### Set-up videowall
-
-Enable the x-server on startup:
-
-```
-sudo cp systemd/startx/override.conf /etc/systemd/system/getty@tty1.service.d/ 
-sudo systemctl daemon-reload
-sudo systemctl restart getty@tty1.service
-```
-
-If everything went well, the x server should now be running and you should see a black screen with a small green font: `pi@raspberrypi`.
-
-Add the following to `/etc/X11/xinit/xinitrc` after the first line to disable screen blanking:
-```
-xset s off         # don't activate screensaver
-xset -dpms         # disable DPMS (Energy Star) features.
-xset s noblank     # don't blank the video device
-```
-
-Set boot config RPI so we can use more GPU memory (not sure whether this has any effect):
-```
-echo "gpu_mem = 386MB" | sudo tee -a /boot/config.txt
-```
-
-We should also net forget to set the `$DISPLAY` environment variable in order to connect with the `x-server` properly:
-
-```
-export DISPLAY=:0
+./install_ubuntu_x86.bash
 ```
 
 ## Quick start
@@ -89,10 +48,12 @@ export DISPLAY=:0
 ### Server
 
     scripts/server
-    
+
 ### Client
 
     scripts/client
+
+This is automaticall started on a raspberry pi after installation. Can be manually started on an ubuntu x86 environment.
 
 ## References
 
@@ -109,3 +70,5 @@ export DISPLAY=:0
 - [dbus omxplayer](https://github.com/popcornmix/omxplayer)
 - [GPU memory 90 degrees omxplayer](https://github.com/popcornmix/omxplayer/issues/467)
 - [Remote dbus control](https://stackoverflow.com/questions/10158684/connecting-to-dbus-over-tcp/13275973#13275973)
+- [GST OMX](https://github.com/GStreamer/gst-omx)
+- [GST MMAL](https://github.com/youviewtv/gst-mmal)
