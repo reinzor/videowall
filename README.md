@@ -76,6 +76,34 @@ Cost `~15 USD` per client
 
 This is automatically started on a raspberry pi after installation. Can be manually started on an ubuntu x86 environment.
 
+### How to create release image
+
+- Create a git tag and update release notes
+- Ensure new MAC generation on startup
+
+```bash
+sudo rm -f /etc/network/mac
+```
+
+- Create `.img` file on Ubuntu host computer (insert sd card):
+
+```bash
+sudo fdisk -l # Get the disk name of the sd card
+sudo dd bs=4M if=/path/to/disk of=/path/to/image.img
+```
+
+- Shrink the image using [pishrink.sh](https://raw.githubusercontent.com/Drewsif/PiShrink/master/pishrink.sh)
+
+```bash
+sudo ./pishrink.sh /path/to/image.img /path/to/shrinked_image.img
+```
+
+- Create a `tar.gz` from image file:
+
+```
+Right click, compress, tar.gz
+```
+
 ## References
 
 - [Cinder GST Sync Player](https://github.com/patrickFuerst/Cinder-GstVideoSyncPlayer)
