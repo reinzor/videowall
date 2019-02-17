@@ -1,4 +1,6 @@
-# Videowall (WIP)
+# Videowall
+
+[![Build Status](https://travis-ci.org/reinzor/videowall.svg?branch=master)](https://travis-ci.org/reinzor/videowall)
 
 ![2 monitor example](doc/example_2monitor.gif)
 
