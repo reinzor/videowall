@@ -13,7 +13,7 @@ sudo -H pip install -r requirements.txt
 
 # Create videos folder and download sample video
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-wget https://github.com/reinzor/videowall/releases/download/0/big_buck_bunny_720p_30mb.mp4 -O $SCRIPT_DIR/videos/videos/big_buck_bunny_720p_30mb.mp4
+wget https://github.com/reinzor/videowall/releases/download/0/big_buck_bunny_720p_30mb.mp4 -O $SCRIPT_DIR/videos/big_buck_bunny_720p_30mb.mp4
 
 # Setup paths in bashrc
 echo "source $SCRIPT_DIR/setup.bash" >> ~/.bashrc
