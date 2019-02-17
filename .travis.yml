@@ -1,0 +1,4 @@
+dist: xenial
+language: generic
+script:
+  - ./install_ubuntu_x86.bash
