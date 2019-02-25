@@ -10,9 +10,10 @@ Video wall with multiple tiles that enables synchronized video playback, mirrore
 
 | Description              |  Video                   |
 :-------------------------:|:-------------------------:
-2x RPI Zero - 720p - Big bug bunny | [![](https://i.ytimg.com/vi/J6anLNTHhKU/hqdefault.jpg?sqp=-oaymwEXCPYBEIoBSFryq4qpAwkIARUAAIhCGAE=&rs=AOn4CLAbHFzynnliHqYyTq_kqAnbEGeOMQ)](https://www.youtube.com/watch?v=J6anLNTHhKU&t=6s)
-2x RPI Zero - 720p - Simpsons | [![](https://i.ytimg.com/vi/LbjiZv7XG90/hqdefault.jpg?sqp=-oaymwEXCPYBEIoBSFryq4qpAwkIARUAAIhCGAE=&rs=AOn4CLAJD6sVR5jl0S1Nh0xCmMs0TnJ5Cg)](https://www.youtube.com/watch?v=LbjiZv7XG90)
-4x RPI Zero + laptop - 720p - Fantastic 4 | [![](https://i.ytimg.com/vi/6yAyf_zFOXs/hqdefault.jpg?sqp=-oaymwEXCPYBEIoBSFryq4qpAwkIARUAAIhCGAE=&rs=AOn4CLBUYEAAOIZw1AJAcohWJSlpyzUQDw)](https://www.youtube.com/watch?v=6yAyf_zFOXs)
+6x RPI Zero - 720p - Big bug bunny | [![](https://img.youtube.com/vi/f5Dp35RL9q8/mqdefault.jpg)](https://www.youtube.com/watch?v=f5Dp35RL9q8&t=6s)
+2x RPI Zero - 720p - Big bug bunny | [![](https://img.youtube.com/vi/J6anLNTHhKU/mqdefault.jpg)](https://www.youtube.com/watch?v=J6anLNTHhKU&t=6s)
+2x RPI Zero - 720p - Simpsons | [![](https://img.youtube.com/vi/LbjiZv7XG90/mqdefault.jpg)](https://www.youtube.com/watch?v=LbjiZv7XG90)
+4x RPI Zero + laptop - 720p - Fantastic 4 | [![](https://img.youtube.com/vi/6yAyf_zFOXs/mqdefault.jpg)](https://www.youtube.com/watch?v=6yAyf_zFOXs)
 
 ## Installation
 
