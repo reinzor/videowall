@@ -66,9 +66,9 @@ class PlayerClient(object):
                                                                                   videocrop_config.top)
             launch_cmd += " ! videoconvert"
             if text_overlay:
-                launch_cmd += ' ! textoverlay text="{}" font-desc="Sans, 12"'.format(text_overlay)
+                launch_cmd += ' ! textoverlay text="{}" font-desc="Sans, 12"'.format(text_overlay.split(".")[-1])
 
-            launch_cmd += ' ! timeoverlay font-desc="Sans, {}"'.format(12 if time_overlay else 1e-3)
+            #launch_cmd += ' ! timeoverlay font-desc="Sans, {}"'.format(12 if time_overlay else 1e-3)
             launch_cmd += " ! queue"
 
             logger.debug("Creating pipeline from launch command %s ..", launch_cmd)
