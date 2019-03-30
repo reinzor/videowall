@@ -2,7 +2,6 @@ import logging
 import os
 import time
 
-from pymediainfo import MediaInfo
 from videowall.gi_version import Gst, GstNet
 from videowall.util import validate_ip_port
 
@@ -31,16 +30,7 @@ class PlayerServer(object):
         if not os.path.exists(filename):
             raise PlayerException("{} does not exist!".format(filename))
 
-        info = MediaInfo.parse(filename)
-
-        for track in info.tracks:
-            if track.track_type == 'Video':
-                video_track = track
-                break
-        else:
-            raise PlayerException("Video does not contain a video track")
-
-        return round(video_track.duration / 1e3, 2)
+        return 122.00
 
     def play(self, filename, base_time_offset):
         self._start = time.time() + base_time_offset

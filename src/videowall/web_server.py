@@ -10,7 +10,6 @@ import tornado.ioloop
 import tornado.options
 import tornado.web
 import tornado.websocket
-from pymediainfo import MediaInfo
 from videowall.server import Server
 from videowall.util import get_unique_filename
 
@@ -114,19 +113,7 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 class UploadHandler(tornado.web.RequestHandler):
     @staticmethod
     def _validate_720p_mp4_file(filename):
-        info = MediaInfo.parse(filename)
-
-        for track in info.tracks:
-            if track.track_type == 'Video':
-                video_track = track
-                if video_track.codec != 'AVC':
-                    raise Exception("Video should have an AVC (h264) encoding")
-                if video_track.width != 1280 or video_track.height != 720:
-                    raise Exception(
-                        "Video should be of size 1280x720, it is {}x{}".format(video_track.width, video_track.height))
-                break
-        else:
-            raise Exception("File does not contain a video track")
+        return
 
     def post(self):
         file_info = self.request.files['file'][0]
