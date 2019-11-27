@@ -69,9 +69,11 @@ Cost `~15 USD` per client
 
 ### Quick start
 
+Make sure you have sources the `setup.bash` from the root directory. This will set the Gstreamer plugin paths and appends the videowall library to your `PYTHONPATH`.
+
 #### Server
 
-    scripts/server
+    scripts/web_server
 
 #### Client
 
