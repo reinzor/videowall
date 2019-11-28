@@ -44,6 +44,8 @@ This installs the videowall software and enables a client service on startup.
 
 #### Ubuntu x86
 
+Installation / usage instruction video: https://youtu.be/XLXoX8bj2vA
+
 ##### Installation prerequisites
 
 - Ubuntu x86 16.04 LTS (other versions not tested)
