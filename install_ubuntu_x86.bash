@@ -6,6 +6,7 @@ sudo apt-get -y install git \
                         gstreamer1.0-plugins-base-apps \
                         gstreamer1.0-plugins-good \
                         gstreamer1.0-plugins-bad \
+                        libmediainfo-dev \
                         python-pip
 
 # Install python dependencies
